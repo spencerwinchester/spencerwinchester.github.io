@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Medication Form</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f9f9f9;
+    padding: 20px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+  }
+  th, td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+  }
+  th {
+    background: #1c75bc;
+    color: white;
+  }
+  select, input, textarea {
+    width: 100%;
+    padding: 6px;
+    box-sizing: border-box;
+  }
+  .add-btn {
+    background: #1c75bc;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    margin-top: 10px;
+    border-radius: 4px;
+  }
+</style>
+</head>
+<body>
+
+<h2>Medication Log</h2>
+
+<form id="medForm">
+  <table id="medTable">
+    <thead>
+      <tr>
+        <th>Medication</th>
+        <th>Time After Accident</th>
+        <th>Dosage</th>
+        <th>Frequency</th>
+        <th>Duration</th>
+        <th>Reason</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <select class="medication" name="medication[]">
+            <option value="">-- Select --</option>
+            <option value="Paracetamol">Paracetamol</option>
+            <option value="Ibuprofen">Ibuprofen</option>
+            <option value="Fentanyl">Fentanyl</option>
+            <option value="Morphine">Morphine</option>
+            <option value="Aspirin">Aspirin</option>
+            <option value="Other">Other</option>
+          </select>
+        </td>
+        <td><input type="text" name="time_after_accident[]" placeholder="e.g., 2 hours"></td>
+        <td>
+          <select class="dosage" name="dosage[]">
+            <option value="">-- Select medication first --</option>
+          </select>
+        </td>
+        <td>
+          <select name="frequency[]">
+            <option value="">-- Select --</option>
+            <option value="Once daily">Once daily</option>
+            <option value="Twice daily">Twice daily</option>
+            <option value="Three times daily">Three times daily</option>
+            <option value="As needed">As needed</option>
+          </select>
+        </td>
+        <td><input type="text" name="duration[]" placeholder="e.g., 5 days"></td>
+        <td><input type="text" name="reason[]" placeholder="Reason for medication"></td>
+        <td><textarea name="notes[]" rows="1" placeholder="Notes"></textarea></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <button type="button" class="add-btn" onclick="addRow()">+ Add Another Medication</button>
+</form>
+
+<script>
+// Medication → Dosage map
+const dosageMap = {
+  "Paracetamol": ["100mg", "200mg", "500mg", "1g"],
+  "Ibuprofen": ["200mg", "400mg", "600mg", "800mg"],
+  "Fentanyl": ["5mcg", "10mcg", "25mcg", "50mcg", "100mcg"],
+  "Morphine": ["5mg", "10mg", "30mg"],
+  "Aspirin": ["100mg", "300mg"],
+  "Other": ["Specify"]
+};
+
+// Update dosage dropdown when medication changes
+function updateDosage(select) {
+  const med = select.value;
+  const dosageSelect = select.closest("tr").querySelector(".dosage");
+  dosageSelect.innerHTML = "";
+
+  if (dosageMap[med]) {
+    dosageMap[med].forEach(dose => {
+      let opt = document.createElement("option");
+      opt.value = dose;
+      opt.textContent = dose;
+      dosageSelect.appendChild(opt);
+    });
+  } else {
+    let opt = document.createElement("option");
+    opt.textContent = "-- Select medication first --";
+    dosageSelect.appendChild(opt);
+  }
+}
+
+// Add event listener to first medication field
+document.querySelector(".medication").addEventListener("change", function() {
+  updateDosage(this);
+});
+
+// Add new row
+function addRow() {
+  const tableBody = document.getElementById("medTable").querySelector("tbody");
+  const firstRow = tableBody.querySelector("tr");
+  const newRow = firstRow.cloneNode(true);
+
+  // Clear values
+  newRow.querySelectorAll("input, textarea").forEach(el => el.value = "");
+  newRow.querySelector(".dosage").innerHTML = "<option>-- Select medication first --</option>";
+  newRow.querySelector(".medication").value = "";
+
+  // Rebind medication change listener
+  newRow.querySelector(".medication").addEventListener("change", function() {
+    updateDosage(this);
+  });
+
+  tableBody.appendChild(newRow);
+}
+</script>
+
+</body>
+</html>
