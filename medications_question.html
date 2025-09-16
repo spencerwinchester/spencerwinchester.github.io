@@ -9,24 +9,68 @@
     background: #f9f9f9;
     padding: 20px;
   }
+  .form-wrapper { width: 1000px; margin: 0 auto; }
   table {
-    width: 100%;
-    border-collapse: collapse;
+    width: 1000px;
+    border-collapse: separate;
+    border-spacing: 2px 2px; 
+    table-layout: fixed;
     margin-bottom: 15px;
   }
   th, td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    text-align: left;
+    border: none;
+    padding: 6px 2px; 
+    width: calc(1000px / 7);
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+    white-space: normal;
+    position: relative; 
   }
+  td { text-align: left; }
   th {
-    background: #1c75bc;
-    color: white;
+    background: transparent;
+    color: #5f6b7a; 
+    font-weight: 600;
+    text-align: left;
+    font-size: 14px;
+    overflow-wrap: break-word;
   }
   select, input, textarea {
     width: 100%;
-    padding: 6px;
+    display: block; /* ensure full-width in cells */
+    padding: 8px 10px;
     box-sizing: border-box;
+    background: #fff;
+    border: 1px solid #d0d7de; /* light border */
+    border-radius: 6px;
+    color: #111827;
+  }
+  select:focus, input:focus, textarea:focus {
+    outline: none;
+    border-color: #1c75bc;
+    box-shadow: 0 0 0 3px rgba(28, 117, 188, 0.15);
+  }
+  .error {
+    border-color: #dc2626 !important; 
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15) !important;
+  }
+  .inline-tooltip {
+    display: none;
+    position: absolute;
+    top: -4px;
+    right: 0;
+    background: #656a74;
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 1.2;
+    white-space: nowrap;
+    z-index: 5;
+  }
+  .other-input {
+    display: none;
+    margin-top: 6px;
   }
   .add-btn {
     background: #1c75bc;
@@ -41,19 +85,18 @@
 </head>
 <body>
 
-<h2>Medication Log</h2>
-
+<div class="form-wrapper">
 <form id="medForm">
   <table id="medTable">
     <thead>
       <tr>
         <th>Medication</th>
-        <th>Time After Accident</th>
+        <th>How soon after the subject accident did you take the medication?</th>
         <th>Dosage</th>
         <th>Frequency</th>
         <th>Duration</th>
         <th>Reason</th>
-        <th>Notes</th>
+        <th>Effectiveness</th>
       </tr>
     </thead>
     <tbody>
@@ -69,40 +112,95 @@
             <option value="Other">Other</option>
           </select>
         </td>
-        <td><input type="text" name="time_after_accident[]" placeholder="e.g., 2 hours"></td>
+        <td>
+          <select class="time-after" name="time_after_accident[]">
+            <option value="">-- Select --</option>
+            <option value="Within 1 hour">Within 1 hour</option>
+            <option value="Within 2-3 hours">Within 2-3 hours</option>
+            <option value="4-6 hours later">4-6 hours later</option>
+            <option value="7-12 hours later">7-12 hours later</option>
+            <option value="12-24 hours later">12-24 hours later</option>
+            <option value="The following day">The following day</option>
+            <option value="2 days later">2 days later</option>
+            <option value="3-5 days later">3-5 days later</option>
+            <option value="More than 5 days later">More than 5 days later</option>
+            <option value="Unsure">Unsure</option>
+          </select>
+        </td>
         <td>
           <select class="dosage" name="dosage[]">
-            <option value="">-- Select medication first --</option>
+            <option value="">-- Select --</option>
           </select>
         </td>
         <td>
           <select name="frequency[]">
             <option value="">-- Select --</option>
-            <option value="Once daily">Once daily</option>
-            <option value="Twice daily">Twice daily</option>
-            <option value="Three times daily">Three times daily</option>
+            <option value="Once only">Once only</option>
             <option value="As needed">As needed</option>
+            <option value="Every 4-6 hours">Every 4-6 hours</option>
+            <option value="Once per day">Once per day</option>
+            <option value="Twice per day (morning and night)">Twice per day (morning and night)</option>
+            <option value="Three times per day">Three times per day</option>
+            <option value="Four times per day">Four times per day</option>
+            <option value="Other">Other</option>
+            <option value="Unsure">Unsure</option>
+          </select>
+          <input type="text" class="other-input frequency-other" name="frequency_other[]" placeholder="Please specify frequency" />
+        </td>
+        <td>
+          <select class="duration" name="duration[]">
+            <option value="">-- Select --</option>
+            <option value="One day">One day</option>
+            <option value="Two days">Two days</option>
+            <option value="Three days">Three days</option>
+            <option value="Four-seven days">Four-seven days</option>
+            <option value="More than one week">More than one week</option>
+            <option value="More than two weeks">More than two weeks</option>
+            <option value="More than one month">More than one month</option>
+            <option value="Ongoing">Ongoing</option>
+            <option value="Other">Other</option>
+            <option value="Unsure">Unsure</option>
+          </select>
+          <input type="text" class="other-input duration-other" name="duration_other[]" placeholder="Please specify duration" />
+        </td>
+        <td>
+          <select class="reason" name="reason[]">
+            <option value="">-- Select --</option>
+            <option value="Pain relief">Pain relief</option>
+            <option value="Inflammation reduction">Inflammation reduction</option>
+            <option value="To aid sleep">To aid sleep</option>
+            <option value="Reduce anxiety or stress">Reduce anxiety or stress</option>
+            <option value="Other">Other</option>
+          </select>
+          <input type="text" class="other-input reason-other" name="reason_other[]" placeholder="Please specify reason" />
+        </td>
+        <td>
+          <select class="effectiveness" name="effectiveness[]">
+            <option value="">-- Select --</option>
+            <option value="Very effective">Very effective</option>
+            <option value="Moderately effective">Moderately effective</option>
+            <option value="Slightly effective">Slightly effective</option>
+            <option value="Not effective">Not effective</option>
+            <option value="Unsure">Unsure</option>
           </select>
         </td>
-        <td><input type="text" name="duration[]" placeholder="e.g., 5 days"></td>
-        <td><input type="text" name="reason[]" placeholder="Reason for medication"></td>
-        <td><textarea name="notes[]" rows="1" placeholder="Notes"></textarea></td>
       </tr>
     </tbody>
   </table>
 
   <button type="button" class="add-btn" onclick="addRow()">+ Add Another Medication</button>
 </form>
+</div>
 
 <script>
 // Medication → Dosage map
 const dosageMap = {
-  "Paracetamol": ["100mg", "200mg", "500mg", "1g"],
-  "Ibuprofen": ["200mg", "400mg", "600mg", "800mg"],
-  "Fentanyl": ["5mcg", "10mcg", "25mcg", "50mcg", "100mcg"],
-  "Morphine": ["5mg", "10mg", "30mg"],
-  "Aspirin": ["100mg", "300mg"],
-  "Other": ["Specify"]
+  "Paracetamol": ["-- Select --", "100mg", "200mg", "500mg", "1g"],
+  "Ibuprofen": ["-- Select --", "200mg", "400mg", "600mg", "800mg"],
+  "Fentanyl": ["-- Select --", "5mcg", "10mcg", "25mcg", "50mcg", "100mcg"],
+  "Morphine": ["-- Select --", "5mg", "10mg", "30mg"],
+  "Aspirin": ["-- Select --", "100mg", "300mg"],
+  "Other": ["-- Select --", "Specify"]
 };
 
 // Update dosage dropdown when medication changes
@@ -120,8 +218,71 @@ function updateDosage(select) {
     });
   } else {
     let opt = document.createElement("option");
-    opt.textContent = "-- Select medication first --";
+    opt.value = "";
+    opt.textContent = "-- Select --";
     dosageSelect.appendChild(opt);
+  }
+
+  // clear any previous error state/tooltip on dosage when medication changes
+  dosageSelect.classList.remove('error');
+  const td = dosageSelect.closest('td');
+  if (td) {
+    const tip = td.querySelector('.inline-tooltip');
+    if (tip) tip.style.display = 'none';
+  }
+}
+
+// Tooltip helper
+function showTooltipFor(el, message) {
+  const cell = el.closest('td');
+  if (!cell) return;
+  let tip = cell.querySelector('.inline-tooltip');
+  if (!tip) {
+    tip = document.createElement('div');
+    tip.className = 'inline-tooltip';
+    cell.appendChild(tip);
+  }
+  tip.textContent = message;
+  tip.style.display = 'block';
+  clearTimeout(tip._hideT);
+  tip._hideT = setTimeout(() => {
+    tip.style.display = 'none';
+    // also clear error highlight when tooltip goes away
+    if (el && el.classList) el.classList.remove('error');
+  }, 2000);
+}
+
+// Show/hide free-text inputs when "Other" is selected
+function toggleOther(selectEl, inputEl) {
+  if (!selectEl || !inputEl) return;
+  if (selectEl.value === 'Other') {
+    inputEl.style.display = 'block';
+  } else {
+    inputEl.value = '';
+    inputEl.style.display = 'none';
+  }
+}
+
+function bindConditionalOtherRow(row) {
+  const freqSelect = row.querySelector('select[name="frequency[]"]');
+  const freqOther = row.querySelector('input.frequency-other');
+  if (freqSelect && freqOther) {
+    freqSelect.addEventListener('change', () => toggleOther(freqSelect, freqOther));
+    toggleOther(freqSelect, freqOther);
+  }
+
+  const durationSelect = row.querySelector('select.duration');
+  const durationOther = row.querySelector('input.duration-other');
+  if (durationSelect && durationOther) {
+    durationSelect.addEventListener('change', () => toggleOther(durationSelect, durationOther));
+    toggleOther(durationSelect, durationOther);
+  }
+
+  const reasonSelect = row.querySelector('select.reason');
+  const reasonOther = row.querySelector('input.reason-other');
+  if (reasonSelect && reasonOther) {
+    reasonSelect.addEventListener('change', () => toggleOther(reasonSelect, reasonOther));
+    toggleOther(reasonSelect, reasonOther);
   }
 }
 
@@ -129,6 +290,27 @@ function updateDosage(select) {
 document.querySelector(".medication").addEventListener("change", function() {
   updateDosage(this);
 });
+
+// Bind conditional "Other" inputs on the first row
+bindConditionalOtherRow(document.querySelector('#medTable tbody tr'));
+
+// Guard dosage selection until medication chosen
+function bindDosageGuard(row) {
+  const medSel = row.querySelector('.medication');
+  const doseSel = row.querySelector('.dosage');
+  if (!doseSel) return;
+  doseSel.addEventListener('mousedown', (e) => {
+    if (medSel && !medSel.value) {
+      e.preventDefault();
+      doseSel.blur();
+      doseSel.classList.add('error');
+      showTooltipFor(doseSel, 'Select medication first');
+    }
+  });
+}
+
+// Bind guard on initial row
+bindDosageGuard(document.querySelector('#medTable tbody tr'));
 
 // Add new row
 function addRow() {
@@ -138,13 +320,35 @@ function addRow() {
 
   // Clear values
   newRow.querySelectorAll("input, textarea").forEach(el => el.value = "");
-  newRow.querySelector(".dosage").innerHTML = "<option>-- Select medication first --</option>";
+  newRow.querySelector(".dosage").innerHTML = "<option value=\"\">-- Select --</option>";
   newRow.querySelector(".medication").value = "";
+  const timeSelect = newRow.querySelector(".time-after");
+  if (timeSelect) timeSelect.value = "";
+  const freqSelect = newRow.querySelector('select[name="frequency[]"]');
+  if (freqSelect) freqSelect.value = "";
+  const durationSelect = newRow.querySelector('.duration');
+  if (durationSelect) durationSelect.value = "";
+  const reasonSelect = newRow.querySelector('.reason');
+  if (reasonSelect) reasonSelect.value = "";
+
+  // Hide and clear any "Other" text inputs
+  newRow.querySelectorAll('.other-input').forEach(input => {
+    input.value = '';
+    input.style.display = 'none';
+  });
+  const effectivenessSelect = newRow.querySelector('.effectiveness');
+  if (effectivenessSelect) effectivenessSelect.value = "";
 
   // Rebind medication change listener
   newRow.querySelector(".medication").addEventListener("change", function() {
     updateDosage(this);
   });
+
+  // Bind conditional Other toggles for the new row
+  bindConditionalOtherRow(newRow);
+
+  // Bind dosage guard for the new row
+  bindDosageGuard(newRow);
 
   tableBody.appendChild(newRow);
 }
