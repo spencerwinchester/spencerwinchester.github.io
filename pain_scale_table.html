@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Pain Scale Table</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;}
+    body{margin:10px;background:#f7f9fb;color:#072b4a}
+    .container{max-width:668px;margin:0 auto;background:#fff;padding:12px;border-radius:8px;box-shadow:0 4px 15px rgba(2,6,23,0.08)}
+    h1{font-size:1rem;margin:0 0 8px}
+    p.lead{margin:0 0 12px;color:#33475b;font-size:0.9rem}
+    table{width:100%;border-collapse:collapse;font-size:0.85rem;table-layout:fixed}
+    th,td{border:1px solid #e3eef7;padding:6px;text-align:center}
+    th:first-child, td:first-child{text-align:center}
+    th{white-space:normal;word-break:break-word}
+    /* Adjust column widths to make the first column a bit wider */
+    th:nth-child(1), td:nth-child(1){width:30%}
+    th:nth-child(2), td:nth-child(2){width:17.5%}
+    th:nth-child(3), td:nth-child(3){width:17.5%}
+    th:nth-child(4), td:nth-child(4){width:17.5%}
+    th:nth-child(5), td:nth-child(5){width:17.5%}
+    input[type="text"]{
+      width:100%;                 /* fill the cell width */
+      box-sizing:border-box;      /* include padding/border */
+      padding:3px;
+      border-radius:3px;
+      border:1px solid #d6e6f6;
+      font-size:0.85rem;
+      display:block;
+      margin:0 auto;              /* keep centered alignment */
+      text-align:center;          /* center the text/placeholder */
+    }
+    input[type="number"]{width:40px;padding:2px;border-radius:3px;border:1px solid #d6e6f6;font-size:0.85rem}
+    select.pain-select{width:60px;padding:2px;border-radius:3px;border:1px solid #d6e6f6;font-size:0.85rem;background:#fff}
+    .add-row{margin-top:8px;font-size:0.85rem;padding:6px 10px}
+    button{padding:6px 10px;border-radius:6px;border:0;background:#0a66c2;color:#fff;cursor:pointer;font-size:0.85rem}
+    @media (max-width:480px){
+      input[type="text"]{width:100%}
+      input[type="number"]{width:30px}
+      select.pain-select{width:48px}
+      table, th, td{font-size:0.75rem;padding:4px}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Please rate your pain on a scale of 0–10:</h1>
+    <p class="lead"><i>(0 = no pain, 10 = worst pain possible)</i></p>
+
+    <form id="pain-form">
+      <table id="pain-table">
+        <thead>
+          <tr>
+            <th>Area of Body</th>
+            <th>Good Day</th>
+            <th>Normal Day</th>
+            <th>Bad Day</th>
+            <th>Today</th>
+          </tr>
+        </thead>
+        <tbody id="rows">
+          <tr>
+            <td><input type="text" name="area_1" placeholder="Please enter your area"></td>
+            <td>
+              <select name="good_1" class="pain-select">
+                <option value="" selected disabled>--</option>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+              </select>
+            </td>
+            <td>
+              <select name="normal_1" class="pain-select">
+                <option value="" selected disabled>--</option>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+              </select>
+            </td>
+            <td>
+              <select name="bad_1" class="pain-select">
+                <option value="" selected disabled>--</option>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+              </select>
+            </td>
+            <td>
+              <select name="today_1" class="pain-select">
+                <option value="" selected disabled>--</option>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+              </select>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <button type="button" class="add-row" id="add-row">+ Add new area</button>
+    </form>
+  </div>
+
+  <script>
+    let rowCount = 1;
+
+    function painSelectHtml(name){
+      let opts = '<option value="" selected disabled>--</option>';
+      for (let i = 0; i <= 10; i++) {
+        opts += `<option value="${i}">${i}</option>`;
+      }
+      return `<select name="${name}" class="pain-select">${opts}</select>`;
+    }
+
+    function autosave(e){
+      const data = new FormData(document.getElementById('pain-form'));
+      const result = {};
+      for (const [k,v] of data.entries()){ result[k] = v; }
+      console.log('Autosave:', result); // replace with actual save logic
+    }
+
+    document.getElementById('rows').addEventListener('input', autosave);
+    document.getElementById('rows').addEventListener('change', autosave);
+
+    document.getElementById('add-row').addEventListener('click', function(){
+      rowCount++;
+      const tbody = document.getElementById('rows');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input type="text" name="area_${rowCount}" placeholder="Please enter your area"></td>
+        <td>${painSelectHtml(`good_${rowCount}`)}</td>
+        <td>${painSelectHtml(`normal_${rowCount}`)}</td>
+        <td>${painSelectHtml(`bad_${rowCount}`)}</td>
+        <td>${painSelectHtml(`today_${rowCount}`)}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  </script>
+</body>
+</html>

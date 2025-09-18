@@ -9,9 +9,9 @@
     background: #ffffff;
     padding: 20px;
   }
-  .form-wrapper { width: 1000px; margin: 0 auto; }
+  .form-wrapper { width: 668px; margin: 0 auto; }
   table {
-    width: 1000px;
+    width: 668px;
     border-collapse: separate;
     border-spacing: 2px 2px; 
     table-layout: fixed;
@@ -20,7 +20,7 @@
   th, td {
     border: none;
     padding: 6px 2px; 
-    width: calc(1000px / 7);
+    width: calc(668px / 7);
     word-wrap: break-word;
     overflow-wrap: anywhere;
     white-space: normal;
@@ -34,6 +34,7 @@
     text-align: left;
     font-size: 14px;
     overflow-wrap: break-word;
+    line-height: 1.25;
   }
   select, input, textarea {
     width: 100%;
@@ -72,6 +73,21 @@
     display: none;
     margin-top: 6px;
   }
+  .placeholder {
+    display: none;
+    color: #6b7280;
+  }
+  td.disabled-field {
+    background: #f3f4f6;
+  }
+  td.disabled-field select,
+  td.disabled-field input,
+  td.disabled-field textarea {
+    display: none !important;
+  }
+  td.disabled-field .placeholder {
+    display: block;
+  }
   .add-btn {
     background: #1c75bc;
     color: white;
@@ -90,13 +106,13 @@
   <table id="medTable">
     <thead>
       <tr>
-        <th>Medication</th>
-        <th>How soon after the subject accident did you take the medication?</th>
-        <th>Dosage</th>
-        <th>Frequency</th>
-        <th>Duration</th>
-        <th>Reason</th>
-        <th>Effectiveness</th>
+        <th>Name of medication:</th>
+        <th>When did you first take the medication?</th>
+        <th>What dose did you take?</th>
+        <th>How often did you take it?</th>
+        <th>For how long did you take it?</th>
+        <th>Why were you taking it?</th>
+        <th>How well did it work?</th>
       </tr>
     </thead>
     <tbody>
@@ -104,15 +120,21 @@
         <td>
           <select class="medication" name="medication[]">
             <option value="">-- Select --</option>
-            <option value="Paracetamol">Paracetamol</option>
-            <option value="Ibuprofen">Ibuprofen</option>
-            <option value="Fentanyl">Fentanyl</option>
-            <option value="Morphine">Morphine</option>
-            <option value="Aspirin">Aspirin</option>
+            <option value="Paracetamol (Panadol, Tylenol, Acetaminophen)">Paracetamol (Panadol, Tylenol, Acetaminophen)</option>
+            <option value="Ibuprofen (Nurofen, Advil, Brufen)">Ibuprofen (Nurofen, Advil, Brufen)</option>
+            <option value="Codeine">Codeine</option>
+            <option value="Panadeine Forte (Paracetamol + Codeine, Panadeine)">Panadeine Forte (Paracetamol + Codeine, Panadeine)</option>
+            <option value="Oxycodone (Endone)">Oxycodone (Endone)</option>
+            <option value="Tramadol (Tramal, Zydol)">Tramadol (Tramal, Zydol)</option>
+            <option value="Morphine (MS Contin, Kapanol, Morphgesic, Avinza)">Morphine (MS Contin, Kapanol, Morphgesic, Avinza)</option>
+            <option value="Aspirin - Disprin, Cartia, Ecotrin, Acetylsalicylic Acid">Aspirin - Disprin, Cartia, Ecotrin, Acetylsalicylic Acid</option>
+            <option value="Diclofenac - Voltaren, Cataflam">Diclofenac - Voltaren, Cataflam</option>
+            <option value="Do not recall">Do not recall</option>
             <option value="Other">Other</option>
           </select>
+          <input type="text" class="other-input medication-other" name="medication_other[]" placeholder="Please specify medication" />
         </td>
-        <td>
+        <td data-lockable>
           <select class="time-after" name="time_after_accident[]">
             <option value="">-- Select --</option>
             <option value="Within 1 hour">Within 1 hour</option>
@@ -126,13 +148,15 @@
             <option value="More than 5 days later">More than 5 days later</option>
             <option value="Unsure">Unsure</option>
           </select>
+          <span class="placeholder" aria-hidden="true">-</span>
         </td>
-        <td>
+        <td data-lockable>
           <select class="dosage" name="dosage[]">
             <option value="">-- Select --</option>
           </select>
+          <span class="placeholder" aria-hidden="true">-</span>
         </td>
-        <td>
+        <td data-lockable>
           <select name="frequency[]">
             <option value="">-- Select --</option>
             <option value="Once only">Once only</option>
@@ -146,8 +170,9 @@
             <option value="Unsure">Unsure</option>
           </select>
           <input type="text" class="other-input frequency-other" name="frequency_other[]" placeholder="Please specify frequency" />
+          <span class="placeholder" aria-hidden="true">-</span>
         </td>
-        <td>
+        <td data-lockable>
           <select class="duration" name="duration[]">
             <option value="">-- Select --</option>
             <option value="One day">One day</option>
@@ -162,8 +187,9 @@
             <option value="Unsure">Unsure</option>
           </select>
           <input type="text" class="other-input duration-other" name="duration_other[]" placeholder="Please specify duration" />
+          <span class="placeholder" aria-hidden="true">-</span>
         </td>
-        <td>
+        <td data-lockable>
           <select class="reason" name="reason[]">
             <option value="">-- Select --</option>
             <option value="Pain relief">Pain relief</option>
@@ -173,8 +199,9 @@
             <option value="Other">Other</option>
           </select>
           <input type="text" class="other-input reason-other" name="reason_other[]" placeholder="Please specify reason" />
+          <span class="placeholder" aria-hidden="true">-</span>
         </td>
-        <td>
+        <td data-lockable>
           <select class="effectiveness" name="effectiveness[]">
             <option value="">-- Select --</option>
             <option value="Very effective">Very effective</option>
@@ -183,6 +210,7 @@
             <option value="Not effective">Not effective</option>
             <option value="Unsure">Unsure</option>
           </select>
+          <span class="placeholder" aria-hidden="true">-</span>
         </td>
       </tr>
     </tbody>
@@ -195,12 +223,79 @@
 <script>
 // Medication → Dosage map
 const dosageMap = {
-  "Paracetamol": ["-- Select --", "100mg", "200mg", "500mg", "1g"],
-  "Ibuprofen": ["-- Select --", "200mg", "400mg", "600mg", "800mg"],
-  "Fentanyl": ["-- Select --", "5mcg", "10mcg", "25mcg", "50mcg", "100mcg"],
-  "Morphine": ["-- Select --", "5mg", "10mg", "30mg"],
-  "Aspirin": ["-- Select --", "100mg", "300mg"],
-  "Other": ["-- Select --", "Specify"]
+  "Paracetamol (Panadol, Tylenol, Acetaminophen)": [
+    "-- Select --",
+    "500mg (1 tablet)",
+    "1000mg (2 tablets)",
+    "More than 1000mg (More than 2 tablets)",
+    "Unsure"
+  ],
+  "Ibuprofen (Nurofen, Advil, Brufen)": [
+    "-- Select --",
+    "200mg (1 tablet)",
+    "400mg (2 tablets)",
+    "More than 400mg (More than 2 tablets)",
+    "Unsure"
+  ],
+  "Codeine": [
+    "-- Select --",
+    "15mg",
+    "30mg",
+    "60mg",
+    "More than 60mg"
+  ],
+  "Panadeine Forte (Paracetamol + Codeine, Panadeine)": [
+    "-- Select --",
+    "500mg/30mg (1 tablet)",
+    "1000mg/60mg (2 tablets)",
+    "More than 1000mg/60mg"
+  ],
+  "Oxycodone (Endone)": [
+    "-- Select --",
+    "5mg",
+    "10mg",
+    "15mg",
+    "20mg",
+    "More than 20mg",
+    "Unsure"
+  ],
+  "Tramadol (Tramal, Zydol)": [
+    "-- Select --",
+    "25mg",
+    "50mg",
+    "75mg",
+    "100mg",
+    "More than 100mg",
+    "Unsure"
+  ],
+  "Morphine (MS Contin, Kapanol, Morphgesic, Avinza)": [
+    "-- Select --",
+    "10 milligrams",
+    "15 milligrams",
+    "30 milligrams",
+    "More than 30 milligrams",
+    "Unsure"
+  ],
+  "Aspirin - Disprin, Cartia, Ecotrin, Acetylsalicylic Acid": [
+    "-- Select --",
+    "100mg (1 low strength tablet)",
+    "300mg (1 regular strength tablet)",
+    "500mg (1 high strength tablet)",
+    "600mg (2 regular strength tablets)",
+    "900mg (3 regular strength tablets)",
+    "1000mg (2 high strength tablets)",
+    "More than 1000mg"
+  ],
+  "Diclofenac - Voltaren, Cataflam": [
+    "-- Select --",
+    "12.5mg (1 low strength tablet)",
+    "25mg (2 low strength tablets/1 medium strength tablet)",
+    "50mg (2 low strength tablets/1 high strength tablet)",
+    "100mg (2 high strength tablets)",
+    "1% (Topical Gel 11.6mg/g)",
+    "2% (Topical Gel 23.2mg/g)"
+  ],
+  "Other": ["-- Select --"]
 };
 
 // Update dosage dropdown when medication changes
@@ -263,6 +358,40 @@ function toggleOther(selectEl, inputEl) {
   }
 }
 
+function setDoNotRecallState(row, shouldLock) {
+  if (!row) return;
+  const lockableCells = row.querySelectorAll('[data-lockable]');
+  lockableCells.forEach(cell => {
+    cell.classList.toggle('disabled-field', shouldLock);
+    const controls = cell.querySelectorAll('select, input, textarea');
+    controls.forEach(control => {
+      control.disabled = shouldLock;
+      control.classList.remove('error');
+      if (shouldLock) {
+        if (control.tagName === 'SELECT') {
+          control.selectedIndex = 0;
+        } else {
+          control.value = '';
+        }
+        if (control.classList.contains('other-input')) {
+          control.style.display = 'none';
+        }
+      }
+    });
+
+    if (!shouldLock) {
+      const select = cell.querySelector('select');
+      const otherField = cell.querySelector('.other-input');
+      if (select && otherField) {
+        toggleOther(select, otherField);
+      }
+    }
+
+    const tip = cell.querySelector('.inline-tooltip');
+    if (tip) tip.style.display = 'none';
+  });
+}
+
 function bindConditionalOtherRow(row) {
   const freqSelect = row.querySelector('select[name="frequency[]"]');
   const freqOther = row.querySelector('input.frequency-other');
@@ -286,13 +415,32 @@ function bindConditionalOtherRow(row) {
   }
 }
 
-// Add event listener to first medication field
-document.querySelector(".medication").addEventListener("change", function() {
-  updateDosage(this);
-});
+function bindMedicationRow(row) {
+  if (!row) return;
+  const medSelect = row.querySelector('.medication');
+  if (!medSelect) return;
+  const medOther = row.querySelector('.medication-other');
+
+  const handleMedicationChange = () => {
+    const isDoNotRecall = medSelect.value === 'Do not recall';
+    setDoNotRecallState(row, isDoNotRecall);
+
+    if (!isDoNotRecall) {
+      updateDosage(medSelect);
+    }
+
+    if (medOther) toggleOther(medSelect, medOther);
+  };
+
+  medSelect.addEventListener('change', handleMedicationChange);
+  handleMedicationChange();
+}
+
+const firstRow = document.querySelector('#medTable tbody tr');
+bindMedicationRow(firstRow);
 
 // Bind conditional "Other" inputs on the first row
-bindConditionalOtherRow(document.querySelector('#medTable tbody tr'));
+bindConditionalOtherRow(firstRow);
 
 // Guard dosage selection until medication chosen
 function bindDosageGuard(row) {
@@ -310,7 +458,7 @@ function bindDosageGuard(row) {
 }
 
 // Bind guard on initial row
-bindDosageGuard(document.querySelector('#medTable tbody tr'));
+bindDosageGuard(firstRow);
 
 // Add new row
 function addRow() {
@@ -339,10 +487,8 @@ function addRow() {
   const effectivenessSelect = newRow.querySelector('.effectiveness');
   if (effectivenessSelect) effectivenessSelect.value = "";
 
-  // Rebind medication change listener
-  newRow.querySelector(".medication").addEventListener("change", function() {
-    updateDosage(this);
-  });
+  // Rebind medication change listener and related toggles
+  bindMedicationRow(newRow);
 
   // Bind conditional Other toggles for the new row
   bindConditionalOtherRow(newRow);
