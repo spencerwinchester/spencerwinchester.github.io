@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ADL & Hobbies</title>
+<style>
+  :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;}
+  body{margin:10px;background:#f7f9fb;color:#000000}
+  .container{max-width:668px;margin:0 auto;background:#fff;padding:12px;border-radius:8px;box-shadow:0 4px 15px rgba(2,6,23,0.08)}
+  h2{font-size:1rem;margin:12px 0 6px;color:#1c75bc;}
+  table{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:0.85rem}
+  th,td{border:1px solid #e3eef7;padding:6px;text-align:center}
+  th:first-child, td:first-child{text-align:left}
+  select,input[type="text"]{width:100%;padding:4px;border-radius:3px;border:1px solid #d6e6f6;font-size:0.85rem;box-sizing:border-box}
+  input[type="text"].hidden{display:none}
+  button.add-row{padding:5px 8px;margin:6px 0;border-radius:4px;border:0;background:#1c75bc;color:#fff;cursor:pointer;font-size:0.8rem}
+  button.delete-row{background:#dc3545;color:#fff;border:none;border-radius:4px;padding:5px 8px;cursor:pointer;font-size:0.8rem}
+</style>
+</head>
+<body>
+<div class="container">
+  <div id="tables-container"></div>
+</div>
+
+<script>
+const categories = [
+  {
+    name: "Personal Care and Daily Tasks",
+    tasks: [
+        "Dressing", 
+        "Bathing/Showering", 
+        "Putting on shoes or socks", 
+        "Trimming of fingernails or toenails", 
+        "Brushing teeth", 
+        "Washing/Drying hair", 
+        "Shaving", 
+        "Applying makeup", 
+        "Toileting", 
+        "Other", 
+        "No difficulties with personal care activities"
+    ]
+  },
+  {
+    name: "Domestic Activities",
+    tasks: [
+        "Food preparation",
+        "Sweeping, mopping, or vacuuming",
+        "Washing Laundry",
+        "Loading and unloading of washer and dryer",
+        "Folding laundry",
+        "Ironing",
+        "Making of beds",
+        "Dusting",
+        "Washing dishes",
+        "Cleaning the bathroom",
+        "Cleaning the kitchen",
+        "Cleaning living areas",
+        "Taking out the rubbish",
+        "General tidying",
+        "Minor repairs (changing lightbulb, etc.)",
+        "Reaching above-shoulder-height",
+        "Other",
+        "No difficulties with domestic tasks"
+    ]
+  },
+  {
+    name: "Recreational Activities / Hobbies / Exercise Routines",
+    tasks: [
+        "Walking or hiking",
+        "Running or jogging",
+        "Gym workouts",
+        "Sports",
+        "Yoga or Pilates",
+        "Swimming",
+        "Gardening",
+        "Playing with children",
+        "Playing with pets",
+        "Dancing",
+        "Playing musical instruments",
+        "Reading or writing",
+        "Travel or vacations",
+        "Cycling or bike riding",
+        "Motorbike riding",
+        "Skiing or snowboarding",
+        "Surfing",
+        "Martial arts",
+        "Fishing",
+        "Cooking or baking",
+        "Camping or caravaning",
+        "Attending theme parks",
+        "Other",
+        "No difficulties with recreational activities"
+    ]
+  },
+  {
+    name: "Social Interactions",
+    tasks: [
+        "Social events", 
+        "Volunteering activities", 
+        "Community activities", 
+        "Other",
+        "No difficulties with social interactions"
+    ]
+  },
+  {
+    name: "Yard Maintenance Activities",
+    tasks: [
+        "Mowing the lawn",
+        "Watering the plants",
+        "Whipper-snipping",
+        "Weeding",
+        "Gardening",
+        "General yard maintenance",
+        "Pool maintenance",
+        "Other",
+        "No difficulties with yard maintenance"
+    ]
+  },
+  {
+    name: "Physical Restriction",
+    tasks: [
+        "Walking",
+        "Sitting for extended periods of time",
+        "Standing for extended periods of time",
+        "Bending/Twisting",
+        "Lifting",
+        "Stretching",
+        "Kneeling",
+        "Squatting",
+        "Traversing ladders",
+        "Traversing uneven ground",
+        "Traversing steps",
+        "Traversing slopes",
+        "Reduced strength",
+        "Fatigue or reduced stamina",
+        "Fine motor tasks",
+        "Other",
+        "No restrictions"
+    ]
+  }
+];
+
+const container = document.getElementById('tables-container');
+
+categories.forEach((cat,catIndex)=>{
+  const div = document.createElement('div');
+  div.innerHTML = `
+    <h2>${cat.name}</h2>
+    <table id="table_${catIndex}">
+      <thead>
+        <tr>
+          <th>Task</th>
+          <th>Before the Accident</th>
+          <th>Currently</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <select name="task_${catIndex}_1" class="task-select">
+              <option value="" disabled selected>-- Select --</option>
+              ${cat.tasks.map(t=>`<option value="${t}">${t}</option>`).join('')}
+            </select>
+            <input type="text" placeholder="Please enter task" class="hidden other-task">
+          </td>
+          <td><input type="text" name="before_${catIndex}_1"></td>
+          <td><input type="text" name="current_${catIndex}_1"></td>
+          <td><button type="button" class="delete-row">Delete</button></td>
+        </tr>
+      </tbody>
+    </table>
+    <button type="button" class="add-row" data-cat="${catIndex}">+ Add Task</button>
+  `;
+  container.appendChild(div);
+});
+
+// Show text field if "Other" selected
+document.addEventListener('change', function(e){
+  if(e.target.classList.contains('task-select')){
+    const tr = e.target.closest('tr');
+    const inputOther = e.target.nextElementSibling;
+    const beforeInput = tr.querySelector('td:nth-child(2) input');
+    const currentInput = tr.querySelector('td:nth-child(3) input');
+
+    // Show/hide "Other" text box
+    inputOther.classList.toggle('hidden', e.target.value !== 'Other');
+
+    // Disable/enable Before & Currently inputs if "No difficulties..." or "No restrictions" is selected
+    const disablePair = e.target.value.includes('No difficulties') || e.target.value.includes('No restrictions');
+    if(disablePair){
+      beforeInput.value = '';
+      currentInput.value = '';
+      beforeInput.disabled = true;
+      currentInput.disabled = true;
+    } else {
+      beforeInput.disabled = false;
+      currentInput.disabled = false;
+    }
+  }
+});
+
+// Add new row button
+document.addEventListener('click', function(e){
+  if(e.target.classList.contains('add-row')){
+    const catIndex = e.target.dataset.cat;
+    const catTasks = categories[catIndex].tasks;
+    const tbody = document.querySelector(`#table_${catIndex} tbody`);
+    const rowCount = tbody.rows.length + 1;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <select name="task_${catIndex}_${rowCount}" class="task-select">
+          <option value="" disabled selected>-- Select --</option>
+          ${catTasks.map(t=>`<option value="${t}">${t}</option>`).join('')}
+        </select>
+        <input type="text" placeholder="Please enter task" class="hidden other-task">
+      </td>
+      <td><input type="text" name="before_${catIndex}_${rowCount}"></td>
+      <td><input type="text" name="current_${catIndex}_${rowCount}"></td>
+      <td><button type="button" class="delete-row">Delete</button></td>
+    `;
+    tbody.appendChild(tr);
+  }
+});
+
+// Delete row button
+document.addEventListener('click', function(e){
+  if(e.target.classList.contains('delete-row')){
+    const tr = e.target.closest('tr');
+    if(tr){
+      tr.remove();
+    }
+  }
+});
+</script>
+</body>
+</html>
