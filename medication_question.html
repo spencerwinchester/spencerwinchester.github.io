@@ -20,7 +20,7 @@
   th, td {
     border: none;
     padding: 6px 2px; 
-    width: calc(668px / 7);
+    width: calc(668px / 8);
     word-wrap: break-word;
     overflow-wrap: anywhere;
     white-space: normal;
@@ -97,7 +97,17 @@
     margin-top: 10px;
     border-radius: 4px;
   }
-</style>
+  .delete-btn {
+    background: #dc3545;
+    color: #fff;
+    border: none;
+    padding: 6px 10px;
+    cursor: pointer;
+    margin-top: 3px;
+    border-radius: 4px;
+  }
+  td.actions { display: flex; align-items: center; }
+  </style>
 </head>
 <body>
 
@@ -113,6 +123,7 @@
         <th>For how long did you take it?</th>
         <th>Why were you taking it?</th>
         <th>How well did it work?</th>
+        <th></th>
       </tr>
     </thead>
     <tbody>
@@ -211,6 +222,9 @@
             <option value="Unsure">Unsure</option>
           </select>
           <span class="placeholder" aria-hidden="true">-</span>
+        </td>
+        <td class="actions">
+          <button type="button" class="delete-btn" onclick="deleteRow(this)">Delete</button>
         </td>
       </tr>
     </tbody>
@@ -461,7 +475,7 @@ function bindDosageGuard(row) {
 bindDosageGuard(firstRow);
 
 // Add new row
-function addRow() {
+  function addRow() {
   const tableBody = document.getElementById("medTable").querySelector("tbody");
   const firstRow = tableBody.querySelector("tr");
   const newRow = firstRow.cloneNode(true);
@@ -497,7 +511,44 @@ function addRow() {
   bindDosageGuard(newRow);
 
   tableBody.appendChild(newRow);
-}
+  }
+
+  // Delete a row; if it's the only row, just clear it
+  function deleteRow(btn) {
+    const row = btn.closest('tr');
+    const tbody = document.querySelector('#medTable tbody');
+    if (!row || !tbody) return;
+    const rows = tbody.querySelectorAll('tr');
+    if (rows.length > 1) {
+      row.remove();
+      return;
+    }
+    // If only one row remains, reset/clear it
+    // Ensure fields are unlocked
+    setDoNotRecallState(row, false);
+
+    // Reset selects
+    row.querySelectorAll('select').forEach(sel => {
+      sel.classList.remove('error');
+      if (sel.classList.contains('dosage')) {
+        sel.innerHTML = '<option value="">-- Select --</option>';
+      } else {
+        sel.value = '';
+      }
+    });
+
+    // Reset inputs/textareas and hide any "Other" inputs
+    row.querySelectorAll('input, textarea').forEach(el => {
+      el.classList.remove('error');
+      el.value = '';
+      if (el.classList.contains('other-input')) {
+        el.style.display = 'none';
+      }
+    });
+
+    // Hide any inline tooltips
+    row.querySelectorAll('.inline-tooltip').forEach(t => { t.style.display = 'none'; });
+  }
 </script>
 
 </body>
