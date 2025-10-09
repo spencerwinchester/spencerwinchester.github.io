@@ -72,14 +72,23 @@
     white-space: nowrap;
     z-index: 5;
   }
-  .other-input {
+  .other-input, .dosage-text {
     display: none;
-    margin-top: 6px;
   }
-  .dosage-text {
-    display: none;
-    margin-top: 0;
+  .other-input.is-active,
+  .dosage-text.is-active {
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    width: 100%;
+    z-index: 2;
   }
+  select.other-hidden {
+    visibility: hidden;
+  }
+  .dosage-text { margin-top: 0; }
   .placeholder {
     display: none;
     color: #6b7280;
@@ -161,7 +170,7 @@
             <option value="Do not recall">Do not recall</option>
             <option value="Other">Other</option>
           </select>
-          <input type="text" class="other-input medication-other" name="medication_other[]" placeholder="Please specify medication" />
+          <input type="text" class="other-input medication-other" name="medication_other[]" placeholder="Please specify medication" disabled />
         </td>
         <td data-lockable>
           <select class="time-after" name="time_after_accident[]">
@@ -183,7 +192,7 @@
           <select class="dosage" name="dosage[]">
             <option value="">-- Select --</option>
           </select>
-          <input type="text" class="dosage-text" name="dosage_text[]" placeholder="Please specify dosage">
+          <input type="text" class="dosage-text" name="dosage_text[]" placeholder="Please specify dosage" disabled>
           <span class="placeholder" aria-hidden="true">-</span>
         </td>
         <td data-lockable>
@@ -199,7 +208,7 @@
             <option value="Other">Other</option>
             <option value="Unsure">Unsure</option>
           </select>
-          <input type="text" class="other-input frequency-other" name="frequency_other[]" placeholder="Please specify frequency" />
+          <input type="text" class="other-input frequency-other" name="frequency_other[]" placeholder="Please specify frequency" disabled />
           <span class="placeholder" aria-hidden="true">-</span>
         </td>
         <td data-lockable>
@@ -216,7 +225,7 @@
             <option value="Other">Other</option>
             <option value="Unsure">Unsure</option>
           </select>
-          <input type="text" class="other-input duration-other" name="duration_other[]" placeholder="Please specify duration" />
+          <input type="text" class="other-input duration-other" name="duration_other[]" placeholder="Please specify duration" disabled />
           <span class="placeholder" aria-hidden="true">-</span>
         </td>
         <td data-lockable>
@@ -228,7 +237,7 @@
             <option value="Reduce anxiety or stress">Reduce anxiety or stress</option>
             <option value="Other">Other</option>
           </select>
-          <input type="text" class="other-input reason-other" name="reason_other[]" placeholder="Please specify reason" />
+          <input type="text" class="other-input reason-other" name="reason_other[]" placeholder="Please specify reason" disabled />
           <span class="placeholder" aria-hidden="true">-</span>
         </td>
         <td data-lockable>
@@ -347,18 +356,21 @@ function updateDosage(select) {
 
   if (dosageInput) {
     if (useTextInput) {
-      dosageSelect.style.display = 'none';
+      dosageSelect.classList.add('other-hidden');
+      dosageSelect.tabIndex = -1;
       dosageSelect.name = '';
       dosageSelect.innerHTML = '<option value="">-- Select --</option>';
-      dosageInput.style.display = 'block';
+      dosageInput.classList.add('is-active');
       dosageInput.disabled = false;
       dosageInput.name = 'dosage[]';
       dosageInput.focus();
     } else {
-      dosageInput.style.display = 'none';
+      dosageInput.classList.remove('is-active');
       dosageInput.value = '';
+      dosageInput.disabled = true;
       dosageInput.name = 'dosage_text[]';
-      dosageSelect.style.display = '';
+      dosageSelect.classList.remove('other-hidden');
+      dosageSelect.tabIndex = 0;
       if (!dosageSelect.name) dosageSelect.name = 'dosage[]';
     }
   }
@@ -448,12 +460,21 @@ function showTooltipFor(el, message) {
 // Show/hide free-text inputs when "Other" is selected
 function toggleOther(selectEl, inputEl) {
   if (!selectEl || !inputEl) return;
-  if (selectEl.value === 'Other') {
-    inputEl.style.display = 'block';
+  const show = selectEl.value === 'Other';
+  if (show) {
+    inputEl.disabled = false;
+    inputEl.classList.add('is-active');
+    selectEl.classList.add('other-hidden');
+    selectEl.tabIndex = -1;
+    requestAnimationFrame(() => inputEl.focus());
   } else {
     inputEl.value = '';
-    inputEl.style.display = 'none';
+    inputEl.disabled = true;
+    inputEl.classList.remove('is-active');
+    selectEl.classList.remove('other-hidden');
+    selectEl.tabIndex = 0;
   }
+  syncDeleteButtonSizes();
 }
 
 function setDoNotRecallState(row, shouldLock) {
@@ -468,14 +489,23 @@ function setDoNotRecallState(row, shouldLock) {
       if (shouldLock) {
         if (control.tagName === 'SELECT') {
           control.selectedIndex = 0;
+          control.classList.remove('other-hidden');
+          control.tabIndex = 0;
         } else {
           control.value = '';
         }
         if (control.classList.contains('other-input')) {
-          control.style.display = 'none';
+          control.classList.remove('is-active');
+          control.disabled = true;
+          const relatedSelect = cell.querySelector('select');
+          if (relatedSelect) {
+            relatedSelect.classList.remove('other-hidden');
+            relatedSelect.tabIndex = 0;
+          }
         }
         if (control.classList.contains('dosage-text')) {
-          control.style.display = 'none';
+          control.classList.remove('is-active');
+          control.disabled = true;
           control.name = 'dosage_text[]';
         }
       }
@@ -575,7 +605,8 @@ bindDosageGuard(firstRow);
   const newDosageSelect = newRow.querySelector(".dosage");
   if (newDosageSelect) {
     newDosageSelect.innerHTML = "<option value=\"\">-- Select --</option>";
-    newDosageSelect.style.display = '';
+    newDosageSelect.classList.remove('other-hidden');
+    newDosageSelect.tabIndex = 0;
     newDosageSelect.name = 'dosage[]';
   }
   newRow.querySelector(".medication").value = "";
@@ -591,11 +622,18 @@ bindDosageGuard(firstRow);
   // Hide and clear any "Other" text inputs
   newRow.querySelectorAll('.other-input').forEach(input => {
     input.value = '';
-    input.style.display = 'none';
+    input.disabled = true;
+    input.classList.remove('is-active');
+    const relatedSelect = input.closest('td') ? input.closest('td').querySelector('select') : null;
+    if (relatedSelect) {
+      relatedSelect.classList.remove('other-hidden');
+      relatedSelect.tabIndex = 0;
+    }
   });
   const newDosageInput = newRow.querySelector('.dosage-text');
   if (newDosageInput) {
-    newDosageInput.style.display = 'none';
+    newDosageInput.classList.remove('is-active');
+    newDosageInput.disabled = true;
     newDosageInput.name = 'dosage_text[]';
   }
   const effectivenessSelect = newRow.querySelector('.effectiveness');
@@ -634,7 +672,8 @@ bindDosageGuard(firstRow);
       sel.classList.remove('error');
       if (sel.classList.contains('dosage')) {
         sel.innerHTML = '<option value="">-- Select --</option>';
-        sel.style.display = '';
+        sel.classList.remove('other-hidden');
+        sel.tabIndex = 0;
         sel.name = 'dosage[]';
       } else {
         sel.value = '';
@@ -646,10 +685,17 @@ bindDosageGuard(firstRow);
       el.classList.remove('error');
       el.value = '';
       if (el.classList.contains('other-input')) {
-        el.style.display = 'none';
+        el.classList.remove('is-active');
+        el.disabled = true;
+        const relatedSelect = el.closest('td') ? el.closest('td').querySelector('select') : null;
+        if (relatedSelect) {
+          relatedSelect.classList.remove('other-hidden');
+          relatedSelect.tabIndex = 0;
+        }
       }
       if (el.classList.contains('dosage-text')) {
-        el.style.display = 'none';
+        el.classList.remove('is-active');
+        el.disabled = true;
         el.name = 'dosage_text[]';
       }
     });
