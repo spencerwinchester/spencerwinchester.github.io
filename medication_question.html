@@ -76,6 +76,10 @@
     display: none;
     margin-top: 6px;
   }
+  .dosage-text {
+    display: none;
+    margin-top: 6px;
+  }
   .placeholder {
     display: none;
     color: #6b7280;
@@ -168,6 +172,7 @@
           <select class="dosage" name="dosage[]">
             <option value="">-- Select --</option>
           </select>
+          <input type="text" class="dosage-text" name="dosage_text[]" placeholder="Please specify dosage">
           <span class="placeholder" aria-hidden="true">-</span>
         </td>
         <td data-lockable>
@@ -317,8 +322,42 @@ const dosageMap = {
 
 // Update dosage dropdown when medication changes
 function updateDosage(select) {
+  const row = select.closest("tr");
+  if (!row) return;
   const med = select.value;
-  const dosageSelect = select.closest("tr").querySelector(".dosage");
+  const dosageSelect = row.querySelector(".dosage");
+  if (!dosageSelect) return;
+  const dosageInput = row.querySelector(".dosage-text");
+  const useTextInput = med === 'Other';
+
+  if (dosageInput) {
+    if (useTextInput) {
+      dosageSelect.style.display = 'none';
+      dosageSelect.name = '';
+      dosageSelect.innerHTML = '<option value="">-- Select --</option>';
+      dosageInput.style.display = 'block';
+      dosageInput.disabled = false;
+      dosageInput.name = 'dosage[]';
+      dosageInput.focus();
+    } else {
+      dosageInput.style.display = 'none';
+      dosageInput.value = '';
+      dosageInput.name = 'dosage_text[]';
+      dosageSelect.style.display = '';
+      if (!dosageSelect.name) dosageSelect.name = 'dosage[]';
+    }
+  }
+
+  if (useTextInput) {
+    dosageSelect.classList.remove('error');
+    const tdText = dosageSelect.closest('td');
+    if (tdText) {
+      const tip = tdText.querySelector('.inline-tooltip');
+      if (tip) tip.style.display = 'none';
+    }
+    return;
+  }
+
   dosageSelect.innerHTML = "";
 
   if (dosageMap[med]) {
@@ -392,6 +431,10 @@ function setDoNotRecallState(row, shouldLock) {
         }
         if (control.classList.contains('other-input')) {
           control.style.display = 'none';
+        }
+        if (control.classList.contains('dosage-text')) {
+          control.style.display = 'none';
+          control.name = 'dosage_text[]';
         }
       }
     });
@@ -485,7 +528,12 @@ bindDosageGuard(firstRow);
 
   // Clear values
   newRow.querySelectorAll("input, textarea").forEach(el => el.value = "");
-  newRow.querySelector(".dosage").innerHTML = "<option value=\"\">-- Select --</option>";
+  const newDosageSelect = newRow.querySelector(".dosage");
+  if (newDosageSelect) {
+    newDosageSelect.innerHTML = "<option value=\"\">-- Select --</option>";
+    newDosageSelect.style.display = '';
+    newDosageSelect.name = 'dosage[]';
+  }
   newRow.querySelector(".medication").value = "";
   const timeSelect = newRow.querySelector(".time-after");
   if (timeSelect) timeSelect.value = "";
@@ -501,6 +549,11 @@ bindDosageGuard(firstRow);
     input.value = '';
     input.style.display = 'none';
   });
+  const newDosageInput = newRow.querySelector('.dosage-text');
+  if (newDosageInput) {
+    newDosageInput.style.display = 'none';
+    newDosageInput.name = 'dosage_text[]';
+  }
   const effectivenessSelect = newRow.querySelector('.effectiveness');
   if (effectivenessSelect) effectivenessSelect.value = "";
 
@@ -535,6 +588,8 @@ bindDosageGuard(firstRow);
       sel.classList.remove('error');
       if (sel.classList.contains('dosage')) {
         sel.innerHTML = '<option value="">-- Select --</option>';
+        sel.style.display = '';
+        sel.name = 'dosage[]';
       } else {
         sel.value = '';
       }
@@ -546,6 +601,10 @@ bindDosageGuard(firstRow);
       el.value = '';
       if (el.classList.contains('other-input')) {
         el.style.display = 'none';
+      }
+      if (el.classList.contains('dosage-text')) {
+        el.style.display = 'none';
+        el.name = 'dosage_text[]';
       }
     });
 
