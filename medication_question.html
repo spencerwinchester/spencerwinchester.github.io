@@ -7,11 +7,12 @@
   body {
     font-family: Arial, sans-serif;
     background: #ffffff;
-    padding: 20px;
+    margin: 0;
+    width: 760px;
   }
-  .form-wrapper { width: 668px; margin: 0 auto; }
+  .form-wrapper { width: 760px; max-width: 760px; margin: 0 auto; padding: 20px; box-sizing: border-box; }
   table {
-    width: 668px;
+    width: 100%;
     border-collapse: separate;
     border-spacing: 2px 2px; 
     table-layout: fixed;
@@ -20,7 +21,7 @@
   th, td {
     border: none;
     padding: 6px 2px; 
-    width: calc(668px / 8);
+    width: calc(100% / 8);
     word-wrap: break-word;
     overflow-wrap: anywhere;
     white-space: normal;
