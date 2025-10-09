@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Employment History</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #ffffff;
+    padding: 20px;
+    color: #111827;
+  }
+  .form-wrapper {
+    width: 668px;
+    margin: 0 auto;
+  }
+  .instructions {
+    margin-bottom: 14px;
+    font-size: 15px;
+    line-height: 1.4;
+    color: #1f2933;
+  }
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 6px;
+    table-layout: fixed;
+  }
+  thead th {
+    text-align: left;
+    font-size: 14px;
+    font-weight: 600;
+    color: #5f6b7a;
+    padding: 6px 4px;
+  }
+  tbody tr {
+    background: #f9fafb;
+    border-radius: 8px;
+  }
+  tbody td {
+    padding: 8px 6px;
+    vertical-align: middle;
+  }
+  select,
+  input[type="text"],
+  textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    background: #ffffff;
+    box-sizing: border-box;
+    font-size: 14px;
+    color: #111827;
+    height: 46px;
+  }
+  textarea {
+    min-height: 70px;
+    height: 70px;
+    resize: vertical;
+  }
+  select:focus,
+  input:focus,
+  textarea:focus {
+    outline: none;
+    border-color: #1c75bc;
+    box-shadow: 0 0 0 3px rgba(28, 117, 188, 0.15);
+  }
+  .date-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+  }
+  .ongoing-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+  }
+  .helper-text {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #6b7280;
+  }
+  .actions {
+    width: 60px;
+    text-align: right;
+  }
+  .add-btn,
+  .delete-btn {
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+  .add-btn {
+    background: #1c75bc;
+    color: #ffffff;
+    margin-top: 16px;
+  }
+  .delete-btn {
+    background: #dc3545;
+    color: #ffffff;
+  }
+</style>
+</head>
+<body>
+
+<div class="form-wrapper">
+  <form id="employmentForm">
+    <p class="instructions">
+      List each role you have held. For each, select whether it was before, at the time of, or after the accident. Add more rows if needed.
+    </p>
+
+    <table id="employmentTable">
+      <thead>
+        <tr>
+          <th scope="col">Period</th>
+          <th scope="col">Role &amp; Duties</th>
+          <th scope="col">Employer</th>
+          <th scope="col">Start Year</th>
+          <th scope="col">End Year / Ongoing</th>
+          <th scope="col">Hours per Week</th>
+          <th scope="col" class="actions"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <select name="period[]" class="period-select" aria-label="Employment period">
+              <option value="" disabled selected>-- Select --</option>
+              <option value="before">Before accident</option>
+              <option value="at">At accident</option>
+              <option value="after">After accident</option>
+            </select>
+          </td>
+          <td>
+            <textarea name="role_duties[]" aria-label="Role and duties"></textarea>
+          </td>
+          <td>
+            <input type="text" name="employer[]" aria-label="Employer">
+          </td>
+          <td>
+            <select name="start_year[]" class="year-select start-year" aria-label="Start year">
+              <option value="" disabled selected>-- Year --</option>
+            </select>
+          </td>
+          <td class="date-cell">
+            <select name="end_year[]" class="year-select end-year" aria-label="End year">
+              <option value="" disabled selected>-- Year --</option>
+            </select>
+            <label class="ongoing-wrapper">
+              <input type="checkbox" class="ongoing-checkbox" aria-label="Still employed">
+              <span>Still employed</span>
+            </label>
+          </td>
+          <td>
+            <select name="hours_per_week[]" class="hours-select" aria-describedby="hoursHelp" aria-label="Hours per week">
+              <option value="" disabled selected>-- Select --</option>
+            </select>
+          </td>
+          <td class="actions">
+            <button type="button" class="delete-btn" aria-label="Delete row">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <span id="hoursHelp" class="helper-text">Approximate if unsure.</span>
+
+    <button type="button" id="addRowBtn" class="add-btn">+ Add Row</button>
+  </form>
+</div>
+
+<script>
+(function () {
+  const tableBody = document.querySelector('#employmentTable tbody');
+  const addRowBtn = document.getElementById('addRowBtn');
+  const currentYear = new Date().getFullYear();
+  const earliestYear = 1950;
+  const hourRanges = [
+    { value: '0-5', label: '0-5 hours' },
+    { value: '5-10', label: '5-10 hours' },
+    { value: '10-15', label: '10-15 hours' },
+    { value: '15-20', label: '15-20 hours' },
+    { value: '20-25', label: '20-25 hours' },
+    { value: '25-30', label: '25-30 hours' },
+    { value: '30-35', label: '30-35 hours' },
+    { value: '35-40', label: '35-40 hours' },
+    { value: '40-plus', label: 'More than 40 hours' }
+  ];
+
+  function populateYearSelect(select) {
+    if (!select || select.dataset.initialized === 'true') return;
+    const placeholder = select.querySelector('option[value=""]')?.textContent || '-- Year --';
+    select.innerHTML = `<option value="" disabled selected>${placeholder}</option>`;
+    for (let year = currentYear; year >= earliestYear; year -= 1) {
+      const option = document.createElement('option');
+      option.value = String(year);
+      option.textContent = year;
+      select.appendChild(option);
+    }
+    select.dataset.initialized = 'true';
+  }
+
+  function populateHoursSelect(select) {
+    if (!select || select.dataset.initialized === 'true') return;
+    select.innerHTML = '<option value="" disabled selected>-- Select --</option>';
+    hourRanges.forEach(({ value, label }) => {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = label;
+      select.appendChild(option);
+    });
+    select.dataset.initialized = 'true';
+  }
+
+  function resetRow(row) {
+    row.querySelectorAll('textarea').forEach((textarea) => {
+      textarea.value = '';
+    });
+    row.querySelectorAll('select').forEach((select) => {
+      select.value = '';
+    });
+    row.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+      checkbox.checked = false;
+    });
+    const endYearSelect = row.querySelector('.end-year');
+    if (endYearSelect) {
+      endYearSelect.disabled = false;
+      endYearSelect.setAttribute('aria-disabled', 'false');
+    }
+  }
+
+  function bindRow(row) {
+    const ongoingCheckbox = row.querySelector('.ongoing-checkbox');
+    const endYearSelect = row.querySelector('.end-year');
+    const deleteBtn = row.querySelector('.delete-btn');
+
+    populateYearSelect(row.querySelector('.start-year'));
+    populateYearSelect(endYearSelect);
+    populateHoursSelect(row.querySelector('.hours-select'));
+
+    if (ongoingCheckbox && endYearSelect) {
+      const toggleEndYear = () => {
+        const ongoing = ongoingCheckbox.checked;
+        endYearSelect.disabled = ongoing;
+        if (ongoing) {
+          endYearSelect.value = '';
+        }
+        endYearSelect.setAttribute('aria-disabled', ongoing ? 'true' : 'false');
+      };
+      ongoingCheckbox.addEventListener('change', toggleEndYear);
+      toggleEndYear();
+    }
+
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', () => {
+        const rows = tableBody.querySelectorAll('tr');
+        if (rows.length > 1) {
+          row.remove();
+        } else {
+          resetRow(row);
+          if (ongoingCheckbox) ongoingCheckbox.dispatchEvent(new Event('change'));
+        }
+      });
+    }
+  }
+
+  function addRow() {
+    const templateRow = tableBody.rows[0];
+    const newRow = templateRow.cloneNode(true);
+    resetRow(newRow);
+    tableBody.appendChild(newRow);
+    bindRow(newRow);
+  }
+
+  addRowBtn.addEventListener('click', addRow);
+  Array.from(tableBody.rows).forEach(bindRow);
+})();
+</script>
+
+</body>
+</html>
