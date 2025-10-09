@@ -5,56 +5,120 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Pain Scale Table</title>
   <style>
-    :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;}
-    body{margin:0;background:#fff;color:#000000;width:760px}
-    .container{width:760px;max-width:760px;margin:0 auto;background:transparent;padding:12px;border-radius:8px;box-shadow:none;box-sizing:border-box}
-    h1{font-size:1rem;margin:0 0 8px}
-    p.lead{margin:0 0 12px;color:#000000;font-size:0.9rem}
-    table{width:100%;border-collapse:separate;border-spacing:0 2px;font-size:0.85rem;table-layout:fixed}
-    th,td{border:1px solid transparent;padding:1px 2px;text-align:center;vertical-align:middle}
-    th:first-child, td:first-child{text-align:center}
-    th{white-space:normal;word-break:break-word}
-    th:nth-child(1), td:nth-child(1){width:30%}
-    th:nth-child(2), td:nth-child(2){width:15.5%}
-    th:nth-child(3), td:nth-child(3){width:15.5%}
-    th:nth-child(4), td:nth-child(4){width:15.5%}
-    th:nth-child(5), td:nth-child(5){width:15.5%}
-    th:nth-child(6), td:nth-child(6){width:8%}
-    input[type="text"]{
-      width:100%;
+    html,body{
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;
+      background:#fff;
+      margin:0;
+      width:760px;
+      max-width:760px;
+      overflow-x:hidden;
+      color:#000;
+    }
+    .container{
+      width:760px;
+      max-width:760px;
+      margin:0 auto;
+      padding:0;
       box-sizing:border-box;
-      padding:2px;
-      border-radius:3px;
+      background:transparent;
+    }
+    p.lead{
+      margin:0 0 12px;
+      color:#000;
+      font-size:0.9rem;
+    }
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0 2px;
+      font-size:0.85rem;
+      table-layout:fixed;
+    }
+    th,td{
+      padding:6px 6px;
+      text-align:center;
+      vertical-align:middle;
+      border:none;
+    }
+    th{white-space:normal;word-break:break-word}
+    th:nth-child(1), td:nth-child(1){width:32%}
+    th:nth-child(2), td:nth-child(2),
+    th:nth-child(3), td:nth-child(3),
+    th:nth-child(4), td:nth-child(4),
+    th:nth-child(5), td:nth-child(5){width:12.5%}
+    th:nth-child(6), td:nth-child(6){width:66px}
+    .area-cell{
+      position:relative;
+      width:100%;
+    }
+    .area-select{
+      width:100%;
+      padding:8px 10px;
+      border-radius:6px;
       border:1px solid #d6e6f6;
       font-size:0.85rem;
-      display:block;
-      margin:0 auto;
-      text-align:center;
+      background:#fff;
+      box-sizing:border-box;
     }
-    .area-cell{display:flex; flex-direction:column; gap:2px; align-items:stretch}
-    .area-select{width:100%; padding:2px; border-radius:3px; border:1px solid #d6e6f6; font-size:0.85rem; background:#fff}
-    .area-other{width:100%;}
-    input[type="number"]{width:40px;padding:2px;border-radius:3px;border:1px solid #d6e6f6;font-size:0.85rem}
-    select.pain-select{width:60px;padding:1px 2px;border-radius:3px;border:1px solid #d6e6f6;font-size:0.85rem;background:#fff}
-    .add-row{margin-top:8px;font-size:0.85rem;padding:6px 10px}
-    button{padding:6px 10px;border-radius:6px;border:0;background:#1c75bc;color:#fff;cursor:pointer;font-size:0.85rem}
-    .delete-row {
-    background: #dc3545;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    padding: 5px 5px;
-    font-size: 0.8rem;
-    cursor: pointer;
-    display: block;
-    margin: 0 auto;        /* centers inside the cell */
-  }
-
+    .area-other{
+      display:none;
+      position:absolute;
+      top:50%;
+      left:0;
+      transform:translateY(-50%);
+      width:100%;
+      padding:8px 10px;
+      border-radius:6px;
+      border:1px solid #d6e6f6;
+      font-size:0.85rem;
+      background:#fff;
+      box-sizing:border-box;
+    }
+    .area-other.is-active{display:block;}
+    .area-select.other-hidden{visibility:hidden;}
+    select.pain-select{
+      width:72px;
+      padding:8px 10px;
+      border-radius:6px;
+      border:1px solid #d6e6f6;
+      font-size:0.85rem;
+      background:#fff;
+      box-sizing:border-box;
+    }
+    .add-row{
+      margin-top:12px;
+      font-size:0.85rem;
+      padding:10px 14px;
+      border-radius:6px;
+      border:none;
+      background:#1c75bc;
+      color:#fff;
+      cursor:pointer;
+    }
+    button{font-size:0.85rem}
+    td.actions{padding:6px 0;display:flex;align-items:center;justify-content:center;}
+    .delete-row{
+      background:#dc3545;
+      color:#fff;
+      border:none;
+      border-radius:6px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:44px;
+      height:44px;
+      padding:0;
+      cursor:pointer;
+      box-sizing:border-box;
+    }
+    .delete-row svg{
+      width:16px;
+      height:16px;
+      fill:currentColor;
+    }
     @media (max-width:480px){
-      input[type="text"]{width:100%}
-      input[type="number"]{width:30px}
-      select.pain-select{width:48px}
       table, th, td{font-size:0.75rem;padding:4px}
+      select.pain-select{width:56px;padding:6px}
     }
   </style>
 </head>
@@ -118,7 +182,7 @@
                   <option value="Right foot">Right foot</option>
                   <option value="Other">Other</option>
                 </select>
-                <input type="text" name="area_1_other" class="area-other" placeholder="Please enter area of body" style="display:none;">
+                <input type="text" name="area_1_other" class="area-other" placeholder="Please enter area of body" disabled>
                 <input type="hidden" name="area_1" value="">
               </div>
             </td>
@@ -186,8 +250,12 @@
                 <option value="10">10</option>
               </select>
             </td>
-            <td>
-              <button type="button" class="delete-row" aria-label="Delete row">Delete</button>
+            <td class="actions">
+              <button type="button" class="delete-row" aria-label="Delete row">
+                <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+                  <path d="M9 3a1 1 0 0 0-.894.553L7.382 5H5a1 1 0 1 0 0 2h14a1 1 0 1 0 0-2h-2.382l-.724-1.447A1 1 0 0 0 14.999 3H9Zm-3 6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9H6Zm4 2a1 1 0 0 1 2 0v8a1 1 0 1 1-2 0v-8Zm4-1a1 1 0 0 1 1 1v8a1 1 0 1 1-2 0v-8a1 1 0 0 1 1-1Z"/>
+                </svg>
+              </button>
             </td>
           </tr>
         </tbody>
@@ -226,7 +294,7 @@
       return `
         <div class="area-cell">
           <select name="area_${index}_select" class="area-select">${areaOptionsHtml()}</select>
-          <input type="text" name="area_${index}_other" class="area-other" placeholder="Please enter area of body" style="display:none;">
+          <input type="text" name="area_${index}_other" class="area-other" placeholder="Please enter area of body" disabled>
           <input type="hidden" name="area_${index}" value="">
         </div>
       `;
@@ -252,14 +320,20 @@
         const other = td.querySelector(`input[name="area_${idx}_other"]`);
         const hidden = td.querySelector(`input[name="area_${idx}"]`);
         if (e.target.value === 'Other'){
-          other.style.display = '';
+          other.disabled = false;
+          other.classList.add('is-active');
+          e.target.classList.add('other-hidden');
+          requestAnimationFrame(() => other.focus());
           hidden.value = other.value.trim();
-          other.focus();
         } else {
-          other.style.display = 'none';
+          other.value = '';
+          other.disabled = true;
+          other.classList.remove('is-active');
+          e.target.classList.remove('other-hidden');
           hidden.value = e.target.value;
         }
         autosave();
+        syncDeleteButtonSizes();
       }
     });
 
@@ -288,9 +362,16 @@
         <td>${painSelectHtml(`normal_${rowCount}`)}</td>
         <td>${painSelectHtml(`bad_${rowCount}`)}</td>
         <td>${painSelectHtml(`today_${rowCount}`)}</td>
-        <td><button type="button" class="delete-row" aria-label="Delete row">Delete</button></td>
+        <td class="actions">
+          <button type="button" class="delete-row" aria-label="Delete row">
+            <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+              <path d="M9 3a1 1 0 0 0-.894.553L7.382 5H5a1 1 0 1 0 0 2h14a1 1 0 1 0 0-2h-2.382l-.724-1.447A1 1 0 0 0 14.999 3H9Zm-3 6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9H6Zm4 2a1 1 0 0 1 2 0v8a1 1 0 1 1-2 0v-8Zm4-1a1 1 0 0 1 1 1v8a1 1 0 1 1-2 0v-8a1 1 0 0 1 1-1Z"/>
+            </svg>
+          </button>
+        </td>
       `;
       tbody.appendChild(tr);
+      syncDeleteButtonSizes();
     });
 
     // Delegate delete row action
@@ -300,9 +381,38 @@
         if (tr){
           tr.remove();
           autosave();
+          syncDeleteButtonSizes();
         }
       }
     });
+
+    function syncDeleteButtonSizes(){
+      const rows = document.querySelectorAll('#pain-table tbody tr');
+      if (!rows.length) return;
+      const headerCell = document.querySelector('#pain-table thead th:last-child');
+      requestAnimationFrame(() => {
+        let latestSize = null;
+        rows.forEach(row => {
+          const btn = row.querySelector('.delete-row');
+          if (!btn) return;
+          const ref = row.querySelector('.pain-select') || row.querySelector('.area-select');
+          if (!ref) return;
+          const h = ref.offsetHeight;
+          if (!h) return;
+          btn.style.height = `${h}px`;
+          btn.style.width = `${h}px`;
+          const cell = btn.closest('td.actions');
+          if (cell) cell.style.width = `${h + 2}px`;
+          latestSize = h;
+        });
+        if (headerCell && latestSize !== null){
+          headerCell.style.width = `${latestSize + 2}px`;
+        }
+      });
+    }
+
+    window.addEventListener('load', syncDeleteButtonSizes);
+    window.addEventListener('resize', syncDeleteButtonSizes);
   </script>
 </body>
 </html>
