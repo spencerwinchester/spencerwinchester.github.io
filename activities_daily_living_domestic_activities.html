@@ -4,17 +4,100 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-  :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;}
-  body{margin:10px;background:#fff;color:#000000}
-  .container{max-width:668px;margin:0 auto;background:transparent;padding:12px;border-radius:8px;box-shadow:none}
+  html, body{
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;
+    background:#fff;
+    margin:0;
+    width:600px;
+    max-width:600px;
+    overflow-x:hidden;
+    color:#000;
+  }
+  .container{
+    width:600px;
+    max-width:600px;
+    margin:0 auto;
+    padding:0 0 16px;
+    box-sizing:border-box;
+  }
   h2{font-size:1rem;margin:12px 0 6px;color:#1c75bc;}
-  table{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:0.85rem}
-  th,td{border:none;padding:6px;text-align:center}
+  table{
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0 2px;
+    margin-bottom:12px;
+    font-size:0.85rem;
+  }
+  th,td{
+    border:none;
+    padding:4px 2px;
+    text-align:center;
+    vertical-align:middle;
+  }
   th:first-child, td:first-child{text-align:left}
-  select,input[type="text"]{width:100%;padding:4px;border-radius:3px;border:1px solid #d6e6f6;font-size:0.85rem;box-sizing:border-box}
-  input[type="text"].hidden{display:none}
-  button.add-row{padding:5px 8px;margin:6px 0;border-radius:4px;border:0;background:#1c75bc;color:#fff;cursor:pointer;font-size:0.8rem}
-  button.delete-row{background:#dc3545;color:#fff;border:none;border-radius:4px;padding:5px 8px;cursor:pointer;font-size:0.8rem}
+  th:last-child{width:42px}
+  td.task-cell{
+    position:relative;
+    min-height:40px;
+  }
+  select,
+  input[type="text"]{
+    width:100%;
+    height:40px;
+    min-height:40px;
+    padding:0 12px;
+    border-radius:6px;
+    border:1px solid #d6e6f6;
+    font-size:0.85rem;
+    box-sizing:border-box;
+    background:#fff;
+  }
+  .other-task{
+    display:none;
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    height:40px;
+    min-height:40px;
+  }
+  .other-task.is-active{display:block;}
+  .task-select.other-hidden{visibility:hidden;}
+  button.add-row{
+    padding:10px 14px;
+    margin:10px 0;
+    border-radius:6px;
+    border:0;
+    background:#1c75bc;
+    color:#fff;
+    cursor:pointer;
+    font-size:0.85rem;
+  }
+  td.actions{
+    padding:4px 0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:42px;
+  }
+  .delete-row{
+    background:#dc3545;
+    color:#fff;
+    border:none;
+    border-radius:6px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:40px;
+    height:40px;
+    padding:0;
+    cursor:pointer;
+  }
+  .delete-row svg{
+    width:16px;
+    height:16px;
+    fill:currentColor;
+  }
 </style>
 </head>
 <body>
@@ -66,16 +149,22 @@ categories.forEach((cat,catIndex)=>{
       </thead>
       <tbody>
         <tr>
-          <td>
+          <td class="task-cell">
             <select name="task_${catIndex}_1" class="task-select">
               <option value="" disabled selected>-- Select --</option>
               ${cat.tasks.map(t=>`<option value="${t}">${t}</option>`).join('')}
             </select>
-            <input type="text" placeholder="Please enter task" class="hidden other-task">
+            <input type="text" placeholder="Please enter task" class="other-task" disabled>
           </td>
           <td><input type="text" name="before_${catIndex}_1"></td>
           <td><input type="text" name="current_${catIndex}_1"></td>
-          <td><button type="button" class="delete-row">Delete</button></td>
+          <td class="actions">
+            <button type="button" class="delete-row" aria-label="Delete row">
+              <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+                <path d="M9 3a1 1 0 0 0-.894.553L7.382 5H5a1 1 0 1 0 0 2h14a1 1 0 1 0 0-2h-2.382l-.724-1.447A1 1 0 0 0 14.999 3H9Zm-3 6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9H6Zm4 2a1 1 0 0 1 2 0v8a1 1 0 1 1-2 0v-8Zm4-1a1 1 0 0 1 1 1v8a1 1 0 1 1-2 0v-8a1 1 0 0 1 1-1Z"/>
+              </svg>
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -92,8 +181,19 @@ document.addEventListener('change', function(e){
     const beforeInput = tr.querySelector('td:nth-child(2) input');
     const currentInput = tr.querySelector('td:nth-child(3) input');
 
-    // Show/hide "Other" text box
-    inputOther.classList.toggle('hidden', e.target.value !== 'Other');
+    if (inputOther) {
+      if (e.target.value === 'Other') {
+        inputOther.disabled = false;
+        inputOther.classList.add('is-active');
+        e.target.classList.add('other-hidden');
+        requestAnimationFrame(() => inputOther.focus());
+      } else {
+        inputOther.value = '';
+        inputOther.disabled = true;
+        inputOther.classList.remove('is-active');
+        e.target.classList.remove('other-hidden');
+      }
+    }
 
     // Disable/enable Before & Currently inputs if "No difficulties..." or "No restrictions" is selected
     const disablePair = e.target.value.includes('No difficulties') || e.target.value.includes('No restrictions');
@@ -118,16 +218,22 @@ document.addEventListener('click', function(e){
     const rowCount = tbody.rows.length + 1;
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>
+      <td class="task-cell">
         <select name="task_${catIndex}_${rowCount}" class="task-select">
           <option value="" disabled selected>-- Select --</option>
           ${catTasks.map(t=>`<option value="${t}">${t}</option>`).join('')}
         </select>
-        <input type="text" placeholder="Please enter task" class="hidden other-task">
+        <input type="text" placeholder="Please enter task" class="other-task" disabled>
       </td>
       <td><input type="text" name="before_${catIndex}_${rowCount}"></td>
       <td><input type="text" name="current_${catIndex}_${rowCount}"></td>
-      <td><button type="button" class="delete-row">Delete</button></td>
+      <td class="actions">
+        <button type="button" class="delete-row" aria-label="Delete row">
+          <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+            <path d="M9 3a1 1 0 0 0-.894.553L7.382 5H5a1 1 0 1 0 0 2h14a1 1 0 1 0 0-2h-2.382l-.724-1.447A1 1 0 0 0 14.999 3H9Zm-3 6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9H6Zm4 2a1 1 0 0 1 2 0v8a1 1 0 1 1-2 0v-8Zm4-1a1 1 0 0 1 1 1v8a1 1 0 1 1-2 0v-8a1 1 0 0 1 1-1Z"/>
+          </svg>
+        </button>
+      </td>
     `;
     tbody.appendChild(tr);
   }
@@ -135,8 +241,9 @@ document.addEventListener('click', function(e){
 
 // Delete row button
 document.addEventListener('click', function(e){
-  if(e.target.classList.contains('delete-row')){
-    const tr = e.target.closest('tr');
+  const btn = e.target.closest('.delete-row');
+  if(btn){
+    const tr = btn.closest('tr');
     if(tr){
       tr.remove();
     }
@@ -145,4 +252,3 @@ document.addEventListener('click', function(e){
 </script>
 </body>
 </html>
-

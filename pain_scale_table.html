@@ -9,14 +9,14 @@
       font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;
       background:#fff;
       margin:0;
-      width:760px;
-      max-width:760px;
+      width:600px;
+      max-width:600px;
       overflow-x:hidden;
       color:#000;
     }
     .container{
-      width:760px;
-      max-width:760px;
+      width:600px;
+      max-width:600px;
       margin:0 auto;
       padding:0;
       box-sizing:border-box;
@@ -35,25 +35,30 @@
       table-layout:fixed;
     }
     th,td{
-      padding:6px 6px;
+      padding:4px 2px;
       text-align:center;
       vertical-align:middle;
       border:none;
     }
     th{white-space:normal;word-break:break-word}
-    th:nth-child(1), td:nth-child(1){width:32%}
+    th:nth-child(1), td:nth-child(1){width:34%}
     th:nth-child(2), td:nth-child(2),
     th:nth-child(3), td:nth-child(3),
     th:nth-child(4), td:nth-child(4),
-    th:nth-child(5), td:nth-child(5){width:12.5%}
-    th:nth-child(6), td:nth-child(6){width:66px}
+    th:nth-child(5), td:nth-child(5){width:13%}
+    th:nth-child(6), td:nth-child(6){width:42px}
     .area-cell{
       position:relative;
       width:100%;
+      min-height:40px;
     }
-    .area-select{
+    .area-select,
+    .area-other,
+    select.pain-select{
       width:100%;
-      padding:8px 10px;
+      height:40px;
+      min-height:40px;
+      padding:0 12px;
       border-radius:6px;
       border:1px solid #d6e6f6;
       font-size:0.85rem;
@@ -63,28 +68,12 @@
     .area-other{
       display:none;
       position:absolute;
-      top:50%;
+      top:0;
       left:0;
-      transform:translateY(-50%);
-      width:100%;
-      padding:8px 10px;
-      border-radius:6px;
-      border:1px solid #d6e6f6;
-      font-size:0.85rem;
-      background:#fff;
-      box-sizing:border-box;
+      transform:translateY(0);
     }
     .area-other.is-active{display:block;}
     .area-select.other-hidden{visibility:hidden;}
-    select.pain-select{
-      width:72px;
-      padding:8px 10px;
-      border-radius:6px;
-      border:1px solid #d6e6f6;
-      font-size:0.85rem;
-      background:#fff;
-      box-sizing:border-box;
-    }
     .add-row{
       margin-top:12px;
       font-size:0.85rem;
@@ -96,7 +85,7 @@
       cursor:pointer;
     }
     button{font-size:0.85rem}
-    td.actions{padding:6px 0;display:flex;align-items:center;justify-content:center;}
+    td.actions{padding:4px 0;display:flex;align-items:center;justify-content:center;}
     .delete-row{
       background:#dc3545;
       color:#fff;
@@ -105,8 +94,8 @@
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      width:44px;
-      height:44px;
+      width:40px;
+      height:40px;
       padding:0;
       cursor:pointer;
       box-sizing:border-box;
@@ -397,16 +386,15 @@
           if (!btn) return;
           const ref = row.querySelector('.pain-select') || row.querySelector('.area-select');
           if (!ref) return;
-          const h = ref.offsetHeight;
-          if (!h) return;
-          btn.style.height = `${h}px`;
-          btn.style.width = `${h}px`;
+          const size = 40;
+          btn.style.height = `${size}px`;
+          btn.style.width = `${size}px`;
           const cell = btn.closest('td.actions');
-          if (cell) cell.style.width = `${h + 2}px`;
-          latestSize = h;
+          if (cell) cell.style.width = '42px';
+          latestSize = size;
         });
         if (headerCell && latestSize !== null){
-          headerCell.style.width = `${latestSize + 2}px`;
+          headerCell.style.width = '42px';
         }
       });
     }
