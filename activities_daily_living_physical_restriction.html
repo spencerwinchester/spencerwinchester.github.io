@@ -195,7 +195,7 @@ document.addEventListener('change', function(e){
     }
 
     // Disable/enable Before & Currently inputs if "No difficulties..." or "No restrictions" is selected
-    const disablePair = e.target.value.includes('No difficulties') || e.target.value.includes('No restrictions');
+    const disablePair = ['No difficulties','No restriction','No restrictions'].some(label => e.target.value.includes(label));
     if(disablePair){
       beforeInput.value = '';
       currentInput.value = '';
