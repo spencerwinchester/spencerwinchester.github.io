@@ -12,7 +12,7 @@
     max-width: 760px;
     overflow-x: hidden;
   }
-  .form-wrapper { width: 760px; max-width: 760px; margin: 0 auto; padding: 20px; box-sizing: border-box; }
+  .form-wrapper { width: 760px; max-width: 760px; margin: 0 auto; padding: 0; box-sizing: border-box; }
   table {
     width: 100%;
     border-collapse: separate;
@@ -78,7 +78,7 @@
   }
   .dosage-text {
     display: none;
-    margin-top: 6px;
+    margin-top: 0;
   }
   .placeholder {
     display: none;
@@ -104,16 +104,27 @@
     margin-top: 10px;
     border-radius: 4px;
   }
+  td.actions { display: flex; align-items: center; justify-content: center; padding: 6px 0; }
   .delete-btn {
     background: #dc3545;
     color: #fff;
     border: none;
-    padding: 6px 10px;
+    padding: 0;
     cursor: pointer;
-    margin-top: 3px;
-    border-radius: 4px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    box-sizing: border-box;
+    margin: 0;
   }
-  td.actions { display: flex; align-items: center; }
+  .delete-btn svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+  }
   </style>
 </head>
 <body>
@@ -232,7 +243,11 @@
           <span class="placeholder" aria-hidden="true">-</span>
         </td>
         <td class="actions">
-          <button type="button" class="delete-btn" onclick="deleteRow(this)">Delete</button>
+          <button type="button" class="delete-btn" onclick="deleteRow(this)" aria-label="Delete row">
+            <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+              <path d="M9 3a1 1 0 0 0-.894.553L7.382 5H5a1 1 0 1 0 0 2h14a1 1 0 1 0 0-2h-2.382l-.724-1.447A1 1 0 0 0 14.999 3H9Zm-3 6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9H6Zm4 2a1 1 0 0 1 2 0v8a1 1 0 1 1-2 0v-8Zm4-1a1 1 0 0 1 1 1v8a1 1 0 1 1-2 0v-8a1 1 0 0 1 1-1Z"/>
+            </svg>
+          </button>
         </td>
       </tr>
     </tbody>
@@ -381,6 +396,33 @@ function updateDosage(select) {
     const tip = td.querySelector('.inline-tooltip');
     if (tip) tip.style.display = 'none';
   }
+  syncDeleteButtonSizes();
+}
+
+function syncDeleteButtonSizes() {
+  const rows = document.querySelectorAll('#medTable tbody tr');
+  if (!rows.length) return;
+  const headerCell = document.querySelector('#medTable thead th:last-child');
+  requestAnimationFrame(() => {
+    let latestSize = null;
+    rows.forEach(row => {
+      const btn = row.querySelector('.delete-btn');
+      const ref = row.querySelector('.medication');
+      if (!btn || !ref) return;
+      const height = ref.offsetHeight;
+      if (!height) return;
+      btn.style.height = `${height}px`;
+      btn.style.width = `${height}px`;
+      const actionsCell = btn.closest('td.actions');
+      if (actionsCell) {
+        actionsCell.style.width = `${height + 2}px`;
+      }
+      latestSize = height;
+    });
+    if (headerCell && latestSize !== null) {
+      headerCell.style.width = `${latestSize + 2}px`;
+    }
+  });
 }
 
 // Tooltip helper
@@ -450,6 +492,7 @@ function setDoNotRecallState(row, shouldLock) {
     const tip = cell.querySelector('.inline-tooltip');
     if (tip) tip.style.display = 'none';
   });
+  syncDeleteButtonSizes();
 }
 
 function bindConditionalOtherRow(row) {
@@ -494,6 +537,7 @@ function bindMedicationRow(row) {
 
   medSelect.addEventListener('change', handleMedicationChange);
   handleMedicationChange();
+  syncDeleteButtonSizes();
 }
 
 const firstRow = document.querySelector('#medTable tbody tr');
@@ -567,6 +611,7 @@ bindDosageGuard(firstRow);
   bindDosageGuard(newRow);
 
   tableBody.appendChild(newRow);
+  syncDeleteButtonSizes();
   }
 
   // Delete a row; if it's the only row, just clear it
@@ -577,6 +622,7 @@ bindDosageGuard(firstRow);
     const rows = tbody.querySelectorAll('tr');
     if (rows.length > 1) {
       row.remove();
+      syncDeleteButtonSizes();
       return;
     }
     // If only one row remains, reset/clear it
@@ -610,7 +656,11 @@ bindDosageGuard(firstRow);
 
     // Hide any inline tooltips
     row.querySelectorAll('.inline-tooltip').forEach(t => { t.style.display = 'none'; });
+    syncDeleteButtonSizes();
   }
+
+window.addEventListener('load', syncDeleteButtonSizes);
+window.addEventListener('resize', syncDeleteButtonSizes);
 </script>
 
 </body>
