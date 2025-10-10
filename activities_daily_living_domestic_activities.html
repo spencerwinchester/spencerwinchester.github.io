@@ -34,7 +34,12 @@
     text-align:center;
     vertical-align:middle;
   }
-  th:first-child, td:first-child{text-align:left}
+  th:first-child, td:first-child{
+    text-align:left;
+    width:25%;
+  }
+  th:nth-child(2), td:nth-child(2),
+  th:nth-child(3), td:nth-child(3){width:37.5%;}
   th:last-child{width:42px}
   td.task-cell{
     position:relative;
@@ -274,11 +279,36 @@ document.addEventListener('click', function(e){
 // Delete row button
 document.addEventListener('click', function(e){
   const btn = e.target.closest('.delete-row');
-  if(btn){
-    const tr = btn.closest('tr');
-    if(tr){
-      tr.remove();
-    }
+  if(!btn) return;
+  const tr = btn.closest('tr');
+  if(!tr) return;
+  const tbody = tr.parentElement;
+  const rows = tbody.querySelectorAll('tr');
+  if(rows.length > 1){
+    tr.remove();
+    return;
+  }
+  const select = tr.querySelector('.task-select');
+  const other = tr.querySelector('.other-task');
+  const beforeInput = tr.querySelector('td:nth-child(2) input');
+  const currentInput = tr.querySelector('td:nth-child(3) input');
+  tr.classList.remove('disabled-row');
+  if (select){
+    select.value = '';
+    select.classList.remove('other-hidden');
+  }
+  if (other){
+    other.value = '';
+    other.disabled = true;
+    other.classList.remove('is-active');
+  }
+  if (beforeInput){
+    beforeInput.value = '';
+    beforeInput.disabled = false;
+  }
+  if (currentInput){
+    currentInput.value = '';
+    currentInput.disabled = false;
   }
 });
 </script>

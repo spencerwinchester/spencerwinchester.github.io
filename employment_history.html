@@ -4,18 +4,24 @@
 <meta charset="UTF-8">
 <title>Employment History</title>
 <style>
-  body {
+  html, body {
     font-family: Arial, sans-serif;
     background: #ffffff;
-    padding: 20px;
+    margin: 0;
+    width: 600px;
+    max-width: 600px;
+    overflow-x: hidden;
     color: #111827;
   }
   .form-wrapper {
-    width: 668px;
+    width: 600px;
+    max-width: 600px;
     margin: 0 auto;
+    padding: 16px 0 24px;
+    box-sizing: border-box;
   }
   .instructions {
-    margin-bottom: 14px;
+    margin: 0 0 12px;
     font-size: 15px;
     line-height: 1.4;
     color: #1f2933;
@@ -23,40 +29,76 @@
   table {
     width: 100%;
     border-collapse: separate;
-    border-spacing: 0 6px;
-    table-layout: fixed;
+    border-spacing: 0 16px;
+    font-size: 0.9rem;
+  }
+  thead tr,
+  tbody tr {
+    display: flex;
+    gap: 12px;
+    align-items: center;
   }
   thead th {
+    flex: 1;
     text-align: left;
-    font-size: 14px;
+    font-size: 0.85rem;
     font-weight: 600;
-    color: #5f6b7a;
-    padding: 6px 4px;
+    color: #4a5568;
+    padding: 0 6px 4px;
+  }
+  thead th.actions {
+    flex: 0 0 48px;
+    text-align: center;
   }
   tbody tr {
-    background: #f9fafb;
-    border-radius: 8px;
+    padding: 16px;
+    background: #ffffff;
+    border: 1px solid #dce3ef;
+    border-radius: 14px;
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
   }
-  tbody td {
-    padding: 8px 6px;
-    vertical-align: middle;
+  tbody td.field-cell {
+    flex: 1;
+    display: flex;
+    align-items: center;
+  }
+  tbody td.field-cell > * {
+    width: 100%;
+    height: 40px;
+    line-height: 24px;
+  }
+  tbody td.field-cell textarea {
+    resize: vertical;
+    min-height: 40px;
+  }
+  tbody td.actions {
+    flex: 0 0 48px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    background: transparent;
+    border: none;
   }
   select,
   input[type="text"],
   textarea {
     width: 100%;
-    padding: 10px 12px;
+    padding: 0 12px;
     border: 1px solid #d0d7de;
     border-radius: 6px;
     background: #ffffff;
     box-sizing: border-box;
-    font-size: 14px;
+    font-size: 0.85rem;
     color: #111827;
-    height: 46px;
+    height: 40px;
+    min-height: 40px;
+    line-height: 24px;
   }
   textarea {
-    min-height: 70px;
-    height: 70px;
+    min-height: 40px;
+    height: 40px;
+    padding: 10px 12px;
     resize: vertical;
   }
   select:focus,
@@ -68,15 +110,7 @@
   }
   .date-cell {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
-    align-items: flex-start;
-  }
-  .ongoing-wrapper {
-    display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 13px;
   }
   .helper-text {
     display: block;
@@ -84,26 +118,41 @@
     font-size: 12px;
     color: #6b7280;
   }
-  .actions {
-    width: 60px;
-    text-align: right;
-  }
-  .add-btn,
-  .delete-btn {
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    padding: 8px 12px;
-    font-size: 14px;
+  td.actions {
+    padding: 12px 8px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-bottom: 1px solid #e2e8f0;
   }
   .add-btn {
-    background: #1c75bc;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    background: #AFBACE;
     color: #ffffff;
     margin-top: 16px;
+    display:inline-block;
   }
   .delete-btn {
     background: #dc3545;
     color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    cursor: pointer;
+  }
+  .delete-btn svg{
+    width:16px;
+    height:16px;
+    fill:currentColor;
   }
 </style>
 </head>
@@ -129,7 +178,7 @@
       </thead>
       <tbody>
         <tr>
-          <td>
+          <td class="field-cell period-cell">
             <select name="period[]" class="period-select" aria-label="Employment period">
               <option value="" disabled selected>-- Select --</option>
               <option value="before">Before accident</option>
@@ -137,33 +186,33 @@
               <option value="after">After accident</option>
             </select>
           </td>
-          <td>
+          <td class="field-cell role-cell">
             <textarea name="role_duties[]" aria-label="Role and duties"></textarea>
           </td>
-          <td>
+          <td class="field-cell employer-cell">
             <input type="text" name="employer[]" aria-label="Employer">
           </td>
-          <td>
+          <td class="field-cell start-cell">
             <select name="start_year[]" class="year-select start-year" aria-label="Start year">
               <option value="" disabled selected>-- Year --</option>
             </select>
           </td>
-          <td class="date-cell">
-            <select name="end_year[]" class="year-select end-year" aria-label="End year">
-              <option value="" disabled selected>-- Year --</option>
+          <td class="field-cell date-cell">
+            <select name="end_year[]" class="year-select end-year allow-ongoing" aria-label="End year or ongoing">
+              <option value="" disabled selected>-- Year / Present --</option>
             </select>
-            <label class="ongoing-wrapper">
-              <input type="checkbox" class="ongoing-checkbox" aria-label="Still employed">
-              <span>Still employed</span>
-            </label>
           </td>
-          <td>
+          <td class="field-cell hours-cell">
             <select name="hours_per_week[]" class="hours-select" aria-describedby="hoursHelp" aria-label="Hours per week">
               <option value="" disabled selected>-- Select --</option>
             </select>
           </td>
           <td class="actions">
-            <button type="button" class="delete-btn" aria-label="Delete row">Delete</button>
+            <button type="button" class="delete-btn" aria-label="Delete row">
+              <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+                <path d="M9 3a1 1 0 0 0-.894.553L7.382 5H5a1 1 0 1 0 0 2h14a1 1 0 1 0 0-2h-2.382l-.724-1.447A1 1 0 0 0 14.999 3H9Zm-3 6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9H6Zm4 2a1 1 0 0 1 2 0v8a1 1 0 1 1-2 0v-8Zm4-1a1 1 0 0 1 1 1v8a1 1 0 1 1-2 0v-8a1 1 0 0 1 1-1Z"/>
+              </svg>
+            </button>
           </td>
         </tr>
       </tbody>
@@ -197,6 +246,12 @@
     if (!select || select.dataset.initialized === 'true') return;
     const placeholder = select.querySelector('option[value=""]')?.textContent || '-- Year --';
     select.innerHTML = `<option value="" disabled selected>${placeholder}</option>`;
+    if (select.classList.contains('allow-ongoing')) {
+      const ongoingOption = document.createElement('option');
+      ongoingOption.value = 'present';
+      ongoingOption.textContent = 'Present / Still employed';
+      select.appendChild(ongoingOption);
+    }
     for (let year = currentYear; year >= earliestYear; year -= 1) {
       const option = document.createElement('option');
       option.value = String(year);
@@ -225,37 +280,15 @@
     row.querySelectorAll('select').forEach((select) => {
       select.value = '';
     });
-    row.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
-      checkbox.checked = false;
-    });
-    const endYearSelect = row.querySelector('.end-year');
-    if (endYearSelect) {
-      endYearSelect.disabled = false;
-      endYearSelect.setAttribute('aria-disabled', 'false');
-    }
   }
 
   function bindRow(row) {
-    const ongoingCheckbox = row.querySelector('.ongoing-checkbox');
     const endYearSelect = row.querySelector('.end-year');
     const deleteBtn = row.querySelector('.delete-btn');
 
     populateYearSelect(row.querySelector('.start-year'));
     populateYearSelect(endYearSelect);
     populateHoursSelect(row.querySelector('.hours-select'));
-
-    if (ongoingCheckbox && endYearSelect) {
-      const toggleEndYear = () => {
-        const ongoing = ongoingCheckbox.checked;
-        endYearSelect.disabled = ongoing;
-        if (ongoing) {
-          endYearSelect.value = '';
-        }
-        endYearSelect.setAttribute('aria-disabled', ongoing ? 'true' : 'false');
-      };
-      ongoingCheckbox.addEventListener('change', toggleEndYear);
-      toggleEndYear();
-    }
 
     if (deleteBtn) {
       deleteBtn.addEventListener('click', () => {
@@ -264,7 +297,6 @@
           row.remove();
         } else {
           resetRow(row);
-          if (ongoingCheckbox) ongoingCheckbox.dispatchEvent(new Event('change'));
         }
       });
     }

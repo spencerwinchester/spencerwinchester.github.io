@@ -367,11 +367,32 @@
     document.getElementById('rows').addEventListener('click', function(e){
       if (e.target && e.target.classList.contains('delete-row')){
         const tr = e.target.closest('tr');
-        if (tr){
+        if (!tr) return;
+        const tbody = tr.parentElement;
+        const rows = tbody.querySelectorAll('tr');
+        if (rows.length > 1){
           tr.remove();
-          autosave();
-          syncDeleteButtonSizes();
+        } else {
+          const areaSelect = tr.querySelector('.area-select');
+          const areaOther = tr.querySelector('.area-other');
+          const hiddenArea = tr.querySelector('input[type="hidden"]');
+          if (areaSelect){
+            areaSelect.value = '';
+            areaSelect.classList.remove('other-hidden');
+          }
+          if (areaOther){
+            areaOther.value = '';
+            areaOther.disabled = true;
+            areaOther.classList.remove('is-active');
+          }
+          if (hiddenArea){ hiddenArea.value = ''; }
+          tr.querySelectorAll('.pain-select').forEach(sel => {
+            sel.value = '';
+            sel.disabled = false;
+          });
         }
+        autosave();
+        syncDeleteButtonSizes();
       }
     });
 
