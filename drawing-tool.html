@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drawing Tool</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: transparent;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 600px;
+            margin: 0;
+            padding: 0;
+        }
+
+        .controls {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button.active {
+            background-color: #28a745;
+        }
+
+        button.erase {
+            background-color: #ffc107;
+        }
+
+        button.erase:hover {
+            background-color: #e0a800;
+        }
+
+        button.reset {
+            background-color: #dc3545;
+        }
+
+        button.reset:hover {
+            background-color: #c82333;
+        }
+
+        #canvas {
+            border: none;
+            cursor: crosshair;
+            display: block;
+            max-width: 100%;
+            height: auto;
+            touch-action: none;
+        }
+
+        #canvas.eraser {
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><circle cx="10" cy="10" r="8" fill="none" stroke="red" stroke-width="2"/></svg>') 10 10, auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <button id="drawBtn" class="active">Draw</button>
+            <button id="eraseBtn" class="erase">Erase</button>
+            <button id="resetBtn" class="reset">Reset</button>
+        </div>
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const drawBtn = document.getElementById('drawBtn');
+        const eraseBtn = document.getElementById('eraseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        let isDrawing = false;
+        let mode = 'draw'; // 'draw' or 'erase'
+        let backgroundImage = new Image();
+        let drawingData = []; // Store all drawing strokes
+
+        // Load the background image
+        backgroundImage.src = 'screenshot-image.png';
+        backgroundImage.onload = function() {
+            // Set canvas size to match image, but constrain to max 600px width
+            const maxWidth = 600;
+            let width = backgroundImage.width;
+            let height = backgroundImage.height;
+
+            if (width > maxWidth) {
+                const ratio = maxWidth / width;
+                width = maxWidth;
+                height = height * ratio;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+
+            redrawCanvas();
+        };
+
+        function redrawCanvas() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw background image
+            ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+
+            // Redraw all stored strokes
+            drawingData.forEach(stroke => {
+                if (stroke.type === 'draw') {
+                    ctx.strokeStyle = 'black';
+                    ctx.lineWidth = 2;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+
+                    ctx.beginPath();
+                    ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+                    for (let i = 1; i < stroke.points.length; i++) {
+                        ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+                    }
+                    ctx.stroke();
+                }
+            });
+        }
+
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            return {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top) * scaleY
+            };
+        }
+
+        function getTouchPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            return {
+                x: (e.touches[0].clientX - rect.left) * scaleX,
+                y: (e.touches[0].clientY - rect.top) * scaleY
+            };
+        }
+
+        let currentStroke = null;
+
+        function startDrawing(pos) {
+            isDrawing = true;
+
+            if (mode === 'draw') {
+                currentStroke = {
+                    type: 'draw',
+                    points: [pos]
+                };
+            } else if (mode === 'erase') {
+                // Check if we're clicking on a stroke to erase it
+                eraseStrokeAtPoint(pos);
+            }
+        }
+
+        function draw(pos) {
+            if (!isDrawing) return;
+
+            if (mode === 'draw') {
+                currentStroke.points.push(pos);
+
+                // Draw the current line segment
+                ctx.strokeStyle = 'black';
+                ctx.lineWidth = 2;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+
+                const prevPoint = currentStroke.points[currentStroke.points.length - 2];
+                ctx.beginPath();
+                ctx.moveTo(prevPoint.x, prevPoint.y);
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+            } else if (mode === 'erase') {
+                eraseStrokeAtPoint(pos);
+            }
+        }
+
+        function stopDrawing() {
+            if (isDrawing && mode === 'draw' && currentStroke) {
+                drawingData.push(currentStroke);
+                currentStroke = null;
+            }
+            isDrawing = false;
+        }
+
+        function eraseStrokeAtPoint(pos) {
+            // Find and remove strokes that contain this point
+            const eraserRadius = 10;
+            let erasedSomething = false;
+
+            drawingData = drawingData.filter(stroke => {
+                if (stroke.type === 'draw') {
+                    // Check if any point in the stroke is within eraser radius
+                    for (let point of stroke.points) {
+                        const distance = Math.sqrt(
+                            Math.pow(point.x - pos.x, 2) +
+                            Math.pow(point.y - pos.y, 2)
+                        );
+                        if (distance < eraserRadius) {
+                            erasedSomething = true;
+                            return false; // Remove this stroke
+                        }
+                    }
+                }
+                return true; // Keep this stroke
+            });
+
+            if (erasedSomething) {
+                redrawCanvas();
+            }
+        }
+
+        // Mouse events
+        canvas.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            startDrawing(getMousePos(e));
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            e.preventDefault();
+            draw(getMousePos(e));
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            stopDrawing();
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            stopDrawing();
+        });
+
+        // Touch events for mobile
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            startDrawing(getTouchPos(e));
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            draw(getTouchPos(e));
+        });
+
+        canvas.addEventListener('touchend', () => {
+            stopDrawing();
+        });
+
+        // Button controls
+        drawBtn.addEventListener('click', () => {
+            mode = 'draw';
+            canvas.classList.remove('eraser');
+            drawBtn.classList.add('active');
+            eraseBtn.classList.remove('active');
+        });
+
+        eraseBtn.addEventListener('click', () => {
+            mode = 'erase';
+            canvas.classList.add('eraser');
+            eraseBtn.classList.add('active');
+            drawBtn.classList.remove('active');
+        });
+
+        resetBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear all drawings?')) {
+                drawingData = [];
+                redrawCanvas();
+            }
+        });
+    </script>
+</body>
+</html>
