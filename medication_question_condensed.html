@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Medication Form</title>
+<style>
+  html, body {
+    font-family: Arial, sans-serif;
+    background: #ffffff;
+    margin: 0;
+    width: 760px;
+    max-width: 760px;
+    overflow-x: auto;
+  }
+  .form-wrapper { width: 760px; max-width: 760px; margin: 0 auto; padding: 0; box-sizing: border-box; }
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 2px; 
+    table-layout: fixed;
+    margin-bottom: 15px;
+  }
+  th, td {
+    border: none;
+    padding: 6px 2px;
+    width: calc(100% / 4);
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+    white-space: normal;
+    position: relative;
+  }
+  td { text-align: left; }
+  th {
+    background: transparent;
+    color: #5f6b7a; 
+    font-weight: 600;
+    text-align: left;
+    font-size: 14px;
+    overflow-wrap: break-word;
+    line-height: 1.25;
+  }
+  select, input, textarea {
+    width: 100%;
+    display: block; /* ensure full-width in cells */
+    padding: 8px 10px;
+    box-sizing: border-box;
+    background: #fff;
+    border: 1px solid #d0d7de; /* light border */
+    border-radius: 6px;
+    color: #111827;
+    height: 40px;
+    min-height: 40px;
+    line-height: 24px;
+  }
+  select:focus, input:focus, textarea:focus {
+    outline: none;
+    border-color: #1c75bc;
+    box-shadow: 0 0 0 3px rgba(28, 117, 188, 0.15);
+  }
+  .error {
+    border-color: #dc2626 !important; 
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15) !important;
+  }
+  .inline-tooltip {
+    display: none;
+    position: absolute;
+    top: -4px;
+    right: 0;
+    background: #656a74;
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 1.2;
+    white-space: nowrap;
+    z-index: 5;
+  }
+  .other-input, .dosage-text {
+    display: none;
+  }
+  .other-input.is-active,
+  .dosage-text.is-active {
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    width: 100%;
+    z-index: 2;
+  }
+  select.other-hidden {
+    visibility: hidden;
+  }
+  .dosage-text { margin-top: 0; }
+  .placeholder {
+    display: none;
+    color: #6b7280;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 0 12px;
+    width: 100%;
+    height: 40px;
+    min-height: 40px;
+    line-height: 24px;
+    box-sizing: border-box;
+    text-align: center;
+    font-size: 0.85rem;
+  }
+  td.disabled-field {
+    background: transparent;
+  }
+  td.disabled-field select,
+  td.disabled-field input,
+  td.disabled-field textarea {
+    display: none !important;
+  }
+  td.disabled-field .placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .add-btn {
+    background: #AFBACE;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    margin-top: 10px;
+    border-radius: 4px;
+  }
+  td.actions { display: flex; align-items: center; justify-content: center; padding: 6px 0; }
+  .delete-btn {
+    background: #dc3545;
+    color: #fff;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    box-sizing: border-box;
+    margin: 0;
+  }
+  .delete-btn svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+  }
+  </style>
+</head>
+<body>
+
+<div class="form-wrapper">
+<form id="medForm">
+  <table id="medTable">
+    <thead>
+      <tr>
+        <th>Name of medication:</th>
+        <th>Why were you taking it?</th>
+        <th>How well did it work?</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <select class="medication" name="medication[]">
+            <option value="">-- Select --</option>
+            <option value="Paracetamol (Panadol, Tylenol, Acetaminophen)">Paracetamol (Panadol, Tylenol, Acetaminophen)</option>
+            <option value="Ibuprofen (Nurofen, Advil, Brufen)">Ibuprofen (Nurofen, Advil, Brufen)</option>
+            <option value="Codeine">Codeine</option>
+            <option value="Panadeine Forte (Paracetamol + Codeine)">Panadeine Forte (Paracetamol + Codeine)</option>
+            <option value="Oxycodone (Endone)">Oxycodone (Endone)</option>
+            <option value="Tramadol (Tramal, Zydol)">Tramadol (Tramal, Zydol)</option>
+            <option value="Morphine (MS Contin, Kapanol, Avinza)">Morphine (MS Contin, Kapanol, Avinza)</option>
+            <option value="Aspirin (Acetylsalicylic Acid)">Aspirin (Acetylsalicylic Acid)</option>
+            <option value="Voltaren (Diclofenac)">Voltaren (Diclofenac)</option>
+            <option value="Do not recall">Do not recall</option>
+            <option value="Other">Other (please specify)</option>
+          </select>
+          <input type="text" class="other-input medication-other" name="medication_other[]" placeholder="Please specify medication" disabled />
+        </td>
+        <td data-lockable>
+          <select class="reason" name="reason[]">
+            <option value="">-- Select --</option>
+            <option value="General pain relief">General pain relief</option>
+            <option value="Acute injury pain">Acute injury pain</option>
+            <option value="Post-surgical pain">Post-surgical pain</option>
+            <option value="Chronic pain condition (e.g., arthritis, back pain)">Chronic pain condition (e.g., arthritis, back pain)</option>
+            <option value="Headache or migraine">Headache or migraine</option>
+            <option value="Muscle pain or spasm">Muscle pain or spasm</option>
+            <option value="Inflammation or swelling">Inflammation or swelling</option>
+            <option value="Nerve pain">Nerve pain</option>
+            <option value="Joint pain">Joint pain</option>
+            <option value="Fever reduction">Fever reduction</option>
+            <option value="To aid sleep">To aid sleep</option>
+            <option value="Reduce anxiety or stress">Reduce anxiety or stress</option>
+            <option value="Prescribed by doctor">Prescribed by doctor</option>
+            <option value="Do not recall">Do not recall</option>
+            <option value="Other">Other (please specify)</option>
+          </select>
+          <input type="text" class="other-input reason-other" name="reason_other[]" placeholder="Please specify reason" disabled />
+          <span class="placeholder" aria-hidden="true">-</span>
+        </td>
+        <td data-lockable>
+          <select class="effectiveness" name="effectiveness[]">
+            <option value="">-- Select --</option>
+            <option value="Very effective">Very effective (completely resolved symptoms)</option>
+            <option value="Moderately effective">Moderately effective (helped significantly)</option>
+            <option value="Somewhat effective">Somewhat effective (provided some relief)</option>
+            <option value="Slightly effective">Slightly effective (minimal improvement)</option>
+            <option value="Not effective (no improvement)">Not effective (no improvement)</option>
+            <option value="Made symptoms worse or caused side effects">Made symptoms worse or caused side effects</option>
+            <option value="Unsure">Unsure</option>
+            <option value="Other">Other (please specify)</option>
+          </select>
+          <input type="text" class="other-input effectiveness-other" name="effectiveness_other[]" placeholder="Please specify effectiveness" disabled />
+          <span class="placeholder" aria-hidden="true">-</span>
+        </td>
+        <td class="actions">
+          <button type="button" class="delete-btn" onclick="deleteRow(this)" aria-label="Delete row">
+            <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+              <path d="M9 3a1 1 0 0 0-.894.553L7.382 5H5a1 1 0 1 0 0 2h14a1 1 0 1 0 0-2h-2.382l-.724-1.447A1 1 0 0 0 14.999 3H9Zm-3 6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9H6Zm4 2a1 1 0 0 1 2 0v8a1 1 0 1 1-2 0v-8Zm4-1a1 1 0 0 1 1 1v8a1 1 0 1 1-2 0v-8a1 1 0 0 1 1-1Z"/>
+            </svg>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <button type="button" class="add-btn" onclick="addRow()">+ Add Another Medication</button>
+</form>
+</div>
+
+<script>
+
+function syncDeleteButtonSizes() {
+  const rows = document.querySelectorAll('#medTable tbody tr');
+  if (!rows.length) return;
+  const headerCell = document.querySelector('#medTable thead th:last-child');
+  requestAnimationFrame(() => {
+    let latestSize = null;
+    rows.forEach(row => {
+      const btn = row.querySelector('.delete-btn');
+      const ref = row.querySelector('.medication');
+      if (!btn || !ref) return;
+      const height = ref.offsetHeight;
+      if (!height) return;
+      btn.style.height = `${height}px`;
+      btn.style.width = `${height}px`;
+      const actionsCell = btn.closest('td.actions');
+      if (actionsCell) {
+        actionsCell.style.width = `${height + 2}px`;
+      }
+      latestSize = height;
+    });
+    if (headerCell && latestSize !== null) {
+      headerCell.style.width = `${latestSize + 2}px`;
+    }
+  });
+}
+
+// Tooltip helper
+function showTooltipFor(el, message) {
+  const cell = el.closest('td');
+  if (!cell) return;
+  let tip = cell.querySelector('.inline-tooltip');
+  if (!tip) {
+    tip = document.createElement('div');
+    tip.className = 'inline-tooltip';
+    cell.appendChild(tip);
+  }
+  tip.textContent = message;
+  tip.style.display = 'block';
+  clearTimeout(tip._hideT);
+  tip._hideT = setTimeout(() => {
+    tip.style.display = 'none';
+    // also clear error highlight when tooltip goes away
+    if (el && el.classList) el.classList.remove('error');
+  }, 2000);
+}
+
+// Show/hide free-text inputs when "Other" is selected
+function toggleOther(selectEl, inputEl) {
+  if (!selectEl || !inputEl) return;
+  const show = selectEl.value === 'Other';
+  if (show) {
+    inputEl.disabled = false;
+    inputEl.classList.add('is-active');
+    selectEl.classList.add('other-hidden');
+    selectEl.tabIndex = -1;
+    requestAnimationFrame(() => inputEl.focus());
+  } else {
+    inputEl.value = '';
+    inputEl.disabled = true;
+    inputEl.classList.remove('is-active');
+    selectEl.classList.remove('other-hidden');
+    selectEl.tabIndex = 0;
+  }
+  syncDeleteButtonSizes();
+}
+
+function setDoNotRecallState(row, shouldLock) {
+  if (!row) return;
+  const lockableCells = row.querySelectorAll('[data-lockable]');
+  lockableCells.forEach(cell => {
+    cell.classList.toggle('disabled-field', shouldLock);
+    const controls = cell.querySelectorAll('select, input, textarea');
+    controls.forEach(control => {
+      control.disabled = shouldLock;
+      control.classList.remove('error');
+      if (shouldLock) {
+        if (control.tagName === 'SELECT') {
+          control.selectedIndex = 0;
+          control.classList.remove('other-hidden');
+          control.tabIndex = 0;
+        } else {
+          control.value = '';
+        }
+        if (control.classList.contains('other-input')) {
+          control.classList.remove('is-active');
+          control.disabled = true;
+          const relatedSelect = cell.querySelector('select');
+          if (relatedSelect) {
+            relatedSelect.classList.remove('other-hidden');
+            relatedSelect.tabIndex = 0;
+          }
+        }
+      }
+    });
+
+    if (!shouldLock) {
+      const select = cell.querySelector('select');
+      const otherField = cell.querySelector('.other-input');
+      if (select && otherField) {
+        toggleOther(select, otherField);
+      }
+    }
+
+    const tip = cell.querySelector('.inline-tooltip');
+    if (tip) tip.style.display = 'none';
+  });
+  syncDeleteButtonSizes();
+}
+
+function bindConditionalOtherRow(row) {
+  const reasonSelect = row.querySelector('select.reason');
+  const reasonOther = row.querySelector('input.reason-other');
+  if (reasonSelect && reasonOther) {
+    reasonSelect.addEventListener('change', () => toggleOther(reasonSelect, reasonOther));
+    toggleOther(reasonSelect, reasonOther);
+  }
+
+  const effectivenessSelect = row.querySelector('select.effectiveness');
+  const effectivenessOther = row.querySelector('input.effectiveness-other');
+  if (effectivenessSelect && effectivenessOther) {
+    effectivenessSelect.addEventListener('change', () => toggleOther(effectivenessSelect, effectivenessOther));
+    toggleOther(effectivenessSelect, effectivenessOther);
+  }
+}
+
+function bindMedicationRow(row) {
+  if (!row) return;
+  const medSelect = row.querySelector('.medication');
+  if (!medSelect) return;
+  const medOther = row.querySelector('.medication-other');
+
+  const handleMedicationChange = () => {
+    const isDoNotRecall = medSelect.value === 'Do not recall';
+    setDoNotRecallState(row, isDoNotRecall);
+
+    if (medOther) toggleOther(medSelect, medOther);
+  };
+
+  medSelect.addEventListener('change', handleMedicationChange);
+  handleMedicationChange();
+  syncDeleteButtonSizes();
+}
+
+const firstRow = document.querySelector('#medTable tbody tr');
+bindMedicationRow(firstRow);
+
+// Bind conditional "Other" inputs on the first row
+bindConditionalOtherRow(firstRow);
+
+// Add new row
+function addRow() {
+  const tableBody = document.getElementById("medTable").querySelector("tbody");
+  const firstRow = tableBody.querySelector("tr");
+  const newRow = firstRow.cloneNode(true);
+
+  // Clear values
+  newRow.querySelectorAll("input, textarea").forEach(el => el.value = "");
+
+  newRow.querySelector(".medication").value = "";
+  const reasonSelect = newRow.querySelector('.reason');
+  if (reasonSelect) reasonSelect.value = "";
+
+  // Hide and clear any "Other" text inputs
+  newRow.querySelectorAll('.other-input').forEach(input => {
+    input.value = '';
+    input.disabled = true;
+    input.classList.remove('is-active');
+    const relatedSelect = input.closest('td') ? input.closest('td').querySelector('select') : null;
+    if (relatedSelect) {
+      relatedSelect.classList.remove('other-hidden');
+      relatedSelect.tabIndex = 0;
+    }
+  });
+  const effectivenessSelect = newRow.querySelector('.effectiveness');
+  if (effectivenessSelect) effectivenessSelect.value = "";
+
+  // Rebind medication change listener and related toggles
+  bindMedicationRow(newRow);
+
+  // Bind conditional Other toggles for the new row
+  bindConditionalOtherRow(newRow);
+
+  tableBody.appendChild(newRow);
+  syncDeleteButtonSizes();
+}
+
+// Delete a row; if it's the only row, just clear it
+function deleteRow(btn) {
+  const row = btn.closest('tr');
+  const tbody = document.querySelector('#medTable tbody');
+  if (!row || !tbody) return;
+  const rows = tbody.querySelectorAll('tr');
+  if (rows.length > 1) {
+    row.remove();
+    syncDeleteButtonSizes();
+    return;
+  }
+  // If only one row remains, reset/clear it
+  // Ensure fields are unlocked
+  setDoNotRecallState(row, false);
+
+  // Reset selects
+  row.querySelectorAll('select').forEach(sel => {
+    sel.classList.remove('error');
+    sel.value = '';
+  });
+
+  // Reset inputs/textareas and hide any "Other" inputs
+  row.querySelectorAll('input, textarea').forEach(el => {
+    el.classList.remove('error');
+    el.value = '';
+    if (el.classList.contains('other-input')) {
+      el.classList.remove('is-active');
+      el.disabled = true;
+      const relatedSelect = el.closest('td') ? el.closest('td').querySelector('select') : null;
+      if (relatedSelect) {
+        relatedSelect.classList.remove('other-hidden');
+        relatedSelect.tabIndex = 0;
+      }
+    }
+  });
+
+  // Hide any inline tooltips
+  row.querySelectorAll('.inline-tooltip').forEach(t => { t.style.display = 'none'; });
+  syncDeleteButtonSizes();
+}
+
+window.addEventListener('load', syncDeleteButtonSizes);
+window.addEventListener('resize', syncDeleteButtonSizes);
+</script>
+
+</body>
+</html>
