@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Pain Scale Table</title>
+  <style>
+    html,body{
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;
+      background:#fff;
+      margin:0;
+      width:600px;
+      max-width:600px;
+      overflow-x:hidden;
+      color:#000;
+    }
+    .container{
+      width:600px;
+      max-width:600px;
+      margin:0 auto;
+      padding:0;
+      box-sizing:border-box;
+      background:transparent;
+    }
+    p.lead{
+      margin:0 0 12px;
+      color:#000;
+      font-size:0.9rem;
+    }
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0 2px;
+      font-size:0.85rem;
+      table-layout:fixed;
+    }
+    th,td{
+      padding:4px 2px;
+      text-align:center;
+      vertical-align:middle;
+      border:none;
+    }
+    th{white-space:normal;word-break:break-word}
+    th:nth-child(1),td:nth-child(1),
+    th:nth-child(2),td:nth-child(2),
+    th:nth-child(3),td:nth-child(3),
+    th:nth-child(4),td:nth-child(4){
+      width:25%;
+    }
+    select.pain-select{
+      width:100%;
+      height:40px;
+      min-height:40px;
+      padding:0 12px;
+      border-radius:6px;
+      border:1px solid #d6e6f6;
+      font-size:0.85rem;
+      background:#fff;
+      box-sizing:border-box;
+    }
+    @media (max-width:480px){
+      table,th,td{font-size:0.75rem;padding:4px}
+      select.pain-select{width:56px;padding:6px}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p class="lead"><i>(0 = no pain, 10 = worst pain possible)</i></p>
+
+    <form id="pain-form">
+      <table id="pain-table">
+        <thead>
+          <tr>
+            <th>Good Day</th>
+            <th>Normal Day</th>
+            <th>Bad Day</th>
+            <th>Today</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <select class="pain-select" name="good">
+                <option value="">Select</option>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+              </select>
+            </td>
+            <td>
+              <select class="pain-select" name="normal">
+                <option value="">Select</option>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+              </select>
+            </td>
+            <td>
+              <select class="pain-select" name="bad">
+                <option value="">Select</option>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+              </select>
+            </td>
+            <td>
+              <select class="pain-select" name="today">
+                <option value="">Select</option>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+              </select>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </form>
+  </div>
+
+  <script>
+    (function(){
+      const storageKey = 'painScaleSimple';
+      const form = document.getElementById('pain-form');
+      if (!form) return;
+
+      const selects = Array.from(form.querySelectorAll('.pain-select'));
+
+      function loadSavedValues(){
+        try{
+          const stored = localStorage.getItem(storageKey);
+          if (!stored) return;
+          const data = JSON.parse(stored);
+          selects.forEach(sel => {
+            if (data && Object.prototype.hasOwnProperty.call(data, sel.name)){
+              sel.value = data[sel.name];
+            }
+          });
+        } catch(e){
+          // If stored data is corrupt, ignore it and continue without breaking the UI.
+        }
+      }
+
+      function autosave(){
+        const payload = selects.reduce((acc, sel) => {
+          acc[sel.name] = sel.value;
+          return acc;
+        }, {});
+        localStorage.setItem(storageKey, JSON.stringify(payload));
+      }
+
+      loadSavedValues();
+
+      form.addEventListener('change', function(e){
+        if (e.target.matches('.pain-select')){
+          autosave();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
