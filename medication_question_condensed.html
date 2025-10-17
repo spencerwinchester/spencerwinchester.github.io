@@ -10,7 +10,11 @@
     margin: 0;
     width: 700px;
     max-width: 700px;
-    overflow-x: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
+    touch-action: pan-x;
+    -ms-touch-action: pan-x;
+    -webkit-overflow-scrolling: touch;
   }
   .form-wrapper { width: 700px; max-width: 700px; margin: 0 auto; padding: 0; box-sizing: border-box; }
   table {
@@ -240,6 +244,79 @@
 const storageKey = 'medicationCondensed';
 let isRestoring = false;
 
+function escapeAttr(str){
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function escapeHtml(str){
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+const medicationOptions = (() => {
+  const firstSelect = document.querySelector('.medication');
+  if (!firstSelect) return [];
+  return Array.from(firstSelect.options).map(opt => ({
+    value: opt.value,
+    label: opt.textContent,
+    disabled: opt.disabled
+  }));
+})();
+
+function updateMedicationOptions(force = false){
+  if (!force && isRestoring) return;
+  const selects = Array.from(document.querySelectorAll('#medTable tbody .medication'));
+  if (!selects.length || !medicationOptions.length) return;
+  const used = new Set();
+  selects.forEach(sel => {
+    const val = sel.value;
+    if (val && val !== 'Other'){
+      used.add(val);
+    }
+  });
+
+  selects.forEach(sel => {
+    const currentVal = sel.value;
+    const optionsHtml = medicationOptions.reduce((acc, opt) => {
+      const isPlaceholder = opt.value === '';
+      const include =
+        isPlaceholder ||
+        opt.value === 'Other' ||
+        opt.value === currentVal ||
+        !used.has(opt.value);
+      if (!include) return acc;
+      const attrs = [];
+      if (opt.disabled) attrs.push('disabled');
+      if (opt.value === currentVal || (!currentVal && isPlaceholder)){
+        attrs.push('selected');
+      }
+      const attrString = attrs.length ? ` ${attrs.join(' ')}` : '';
+      acc.push(`<option value="${escapeAttr(opt.value)}"${attrString}>${escapeHtml(opt.label)}</option>`);
+      return acc;
+    }, []).join('');
+    if (optionsHtml){
+      sel.innerHTML = optionsHtml;
+      if (currentVal){
+        sel.value = currentVal;
+        if (sel.value !== currentVal){
+          sel.value = '';
+        }
+      }
+    }
+    if (sel.value === 'Other'){
+      sel.classList.add('other-hidden');
+    } else {
+      sel.classList.remove('other-hidden');
+    }
+  });
+}
+
 function valueOf(row, selector){
   const el = row.querySelector(selector);
   return el ? el.value : '';
@@ -336,6 +413,7 @@ function restoreState(){
     }
   });
   isRestoring = false;
+  updateMedicationOptions(true);
   saveState();
   syncDeleteButtonSizes();
   return true;
@@ -448,6 +526,7 @@ function setDoNotRecallState(row, shouldLock) {
     if (tip) tip.style.display = 'none';
   });
   syncDeleteButtonSizes();
+  if (!isRestoring) updateMedicationOptions();
 }
 
 function bindConditionalOtherRow(row) {
@@ -524,6 +603,7 @@ function addRow() {
   bindConditionalOtherRow(newRow);
 
   tableBody.appendChild(newRow);
+  if (!isRestoring) updateMedicationOptions();
   syncDeleteButtonSizes();
   if (!isRestoring) saveState();
 }
@@ -537,7 +617,10 @@ function deleteRow(btn) {
   if (rows.length > 1) {
     row.remove();
     syncDeleteButtonSizes();
-    if (!isRestoring) saveState();
+    if (!isRestoring) {
+      updateMedicationOptions();
+      saveState();
+    }
     return;
   }
   // If only one row remains, reset/clear it
@@ -568,7 +651,10 @@ function deleteRow(btn) {
   // Hide any inline tooltips
   row.querySelectorAll('.inline-tooltip').forEach(t => { t.style.display = 'none'; });
   syncDeleteButtonSizes();
-  if (!isRestoring) saveState();
+  if (!isRestoring) {
+    updateMedicationOptions();
+    saveState();
+  }
 }
 
 window.addEventListener('load', syncDeleteButtonSizes);
