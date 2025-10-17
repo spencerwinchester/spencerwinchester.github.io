@@ -242,6 +242,78 @@
     { value: '40-plus', label: 'More than 40 hours' }
   ];
 
+  const storageKey = 'employmentHistory';
+  let isRestoring = false;
+
+  function valueOf(row, selector){
+    const el = row.querySelector(selector);
+    return el ? el.value : '';
+  }
+
+  function saveState(){
+    if (isRestoring) return;
+    try{
+      const rows = Array.from(tableBody.querySelectorAll('tr')).map((row) => ({
+        period: valueOf(row, '.period-select'),
+        duties: valueOf(row, 'textarea[name="role_duties[]"]'),
+        employer: valueOf(row, 'input[name="employer[]"]'),
+        startYear: valueOf(row, '.start-year'),
+        endYear: valueOf(row, '.end-year'),
+        hours: valueOf(row, '.hours-select')
+      }));
+      localStorage.setItem(storageKey, JSON.stringify({ rows }));
+    } catch(err){
+      // Ignore storage failures (private mode, quota exceeded, etc.)
+    }
+  }
+
+  function restoreState(){
+    let stored;
+    try{
+      stored = localStorage.getItem(storageKey);
+      if (!stored) return false;
+    } catch(err){
+      return false;
+    }
+    let data;
+    try{
+      data = JSON.parse(stored);
+    } catch(err){
+      return false;
+    }
+    if (!data || !Array.isArray(data.rows)) return false;
+
+    isRestoring = true;
+    const targetLength = Math.max(1, data.rows.length);
+    while (tableBody.rows.length < targetLength){
+      addRow();
+    }
+    while (tableBody.rows.length > targetLength && tableBody.rows.length > 1){
+      tableBody.removeChild(tableBody.lastElementChild);
+    }
+
+    const rows = Array.from(tableBody.rows);
+    data.rows.forEach((rowData, idx) => {
+      const row = rows[idx];
+      if (!row) return;
+      const period = row.querySelector('.period-select');
+      if (period) period.value = rowData.period || '';
+      const duties = row.querySelector('textarea[name="role_duties[]"]');
+      if (duties) duties.value = rowData.duties || '';
+      const employer = row.querySelector('input[name="employer[]"]');
+      if (employer) employer.value = rowData.employer || '';
+      const startYear = row.querySelector('.start-year');
+      if (startYear) startYear.value = rowData.startYear || '';
+      const endYear = row.querySelector('.end-year');
+      if (endYear) endYear.value = rowData.endYear || '';
+      const hoursSelect = row.querySelector('.hours-select');
+      if (hoursSelect) hoursSelect.value = rowData.hours || '';
+    });
+    isRestoring = false;
+    saveState();
+    return true;
+  }
+
   function populateYearSelect(select) {
     if (!select || select.dataset.initialized === 'true') return;
     const placeholder = select.querySelector('option[value=""]')?.textContent || '-- Year --';
@@ -298,6 +370,7 @@
         } else {
           resetRow(row);
         }
+        if (!isRestoring) saveState();
       });
     }
   }
@@ -308,10 +381,26 @@
     resetRow(newRow);
     tableBody.appendChild(newRow);
     bindRow(newRow);
+    if (!isRestoring) saveState();
+    return newRow;
   }
 
   addRowBtn.addEventListener('click', addRow);
   Array.from(tableBody.rows).forEach(bindRow);
+
+  const form = document.getElementById('employmentForm');
+  if (form){
+    form.addEventListener('change', (e) => {
+      if (e.target.matches('select')) saveState();
+    });
+    form.addEventListener('input', (e) => {
+      if (e.target.matches('input, textarea')) saveState();
+    });
+  }
+
+  if (!restoreState()){
+    saveState();
+  }
 })();
 </script>
 

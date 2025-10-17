@@ -256,6 +256,13 @@
 
   <script>
     let rowCount = 1;
+    const storageKey = 'painScaleDetailed';
+    let isRestoring = false;
+
+    function valueOf(tr, selector){
+      const el = tr.querySelector(selector);
+      return el ? el.value : '';
+    }
 
     function painSelectHtml(name){
       let opts = '<option value="" selected disabled>--</option>';
@@ -289,11 +296,121 @@
       `;
     }
 
-    function autosave(e){
-      const data = new FormData(document.getElementById('pain-form'));
-      const result = {};
-      for (const [k,v] of data.entries()){ result[k] = v; }
-      console.log('Autosave:', result); // replace with actual save logic
+    function autosave(){
+      if (isRestoring) return;
+      try{
+        const rows = Array.from(document.querySelectorAll('#rows tr')).map(tr => {
+          const areaSelect = tr.querySelector('.area-select');
+          const areaOther = tr.querySelector('.area-other');
+          const hiddenArea = tr.querySelector('input[type="hidden"]');
+          return {
+            areaSelect: areaSelect ? areaSelect.value : '',
+            areaOther: areaOther ? areaOther.value : '',
+            hiddenArea: hiddenArea ? hiddenArea.value : '',
+            good: valueOf(tr, 'select[name^="good_"]'),
+            normal: valueOf(tr, 'select[name^="normal_"]'),
+            bad: valueOf(tr, 'select[name^="bad_"]'),
+            today: valueOf(tr, 'select[name^="today_"]')
+          };
+        });
+        localStorage.setItem(storageKey, JSON.stringify({ rows }));
+      } catch(err){
+        // Swallow storage errors (quota, disabled storage, etc.)
+      }
+    }
+
+    function appendRow(){
+      rowCount++;
+      const tbody = document.getElementById('rows');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${areaSelectHtml(rowCount)}</td>
+        <td>${painSelectHtml(`good_${rowCount}`)}</td>
+        <td>${painSelectHtml(`normal_${rowCount}`)}</td>
+        <td>${painSelectHtml(`bad_${rowCount}`)}</td>
+        <td>${painSelectHtml(`today_${rowCount}`)}</td>
+        <td class="actions">
+          <button type="button" class="delete-row" aria-label="Delete row">
+            <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+              <path d="M9 3a1 1 0 0 0-.894.553L7.382 5H5a1 1 0 1 0 0 2h14a1 1 0 1 0 0-2h-2.382l-.724-1.447A1 1 0 0 0 14.999 3H9Zm-3 6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9H6Zm4 2a1 1 0 0 1 2 0v8a1 1 0 1 1-2 0v-8Zm4-1a1 1 0 0 1 1 1v8a1 1 0 1 1-2 0v-8a1 1 0 0 1 1-1Z"/>
+            </svg>
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+      syncDeleteButtonSizes();
+      return tr;
+    }
+
+    function restoreFromStorage(){
+      let stored;
+      try{
+        stored = localStorage.getItem(storageKey);
+        if (!stored) return false;
+      } catch(err){
+        return false;
+      }
+      let data;
+      try{
+        data = JSON.parse(stored);
+      } catch(err){
+        return false;
+      }
+      if (!data || !Array.isArray(data.rows)) return false;
+      const tbody = document.getElementById('rows');
+      if (!tbody) return false;
+
+      isRestoring = true;
+      while (tbody.rows.length < data.rows.length){
+        appendRow();
+      }
+      rowCount = tbody.rows.length;
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      data.rows.forEach((rowData, idx) => {
+        const tr = rows[idx];
+        if (!tr) return;
+        const areaSelect = tr.querySelector('.area-select');
+        if (areaSelect){
+          areaSelect.value = rowData.areaSelect || '';
+          areaSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        const areaOther = tr.querySelector('.area-other');
+        if (areaOther){
+          areaOther.value = rowData.areaOther || '';
+          if (areaSelect && areaSelect.value === 'Other'){
+            areaOther.disabled = false;
+            areaOther.classList.add('is-active');
+            areaSelect.classList.add('other-hidden');
+            areaOther.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+        }
+        const hiddenArea = tr.querySelector('input[type="hidden"]');
+        if (hiddenArea){
+          if (rowData.hiddenArea){
+            hiddenArea.value = rowData.hiddenArea;
+          } else if (areaSelect){
+            hiddenArea.value = areaSelect.value === 'Other'
+              ? (areaOther ? areaOther.value.trim() : '')
+              : areaSelect.value;
+          }
+        }
+        const mappings = [
+          ['select[name^="good_"]', 'good'],
+          ['select[name^="normal_"]', 'normal'],
+          ['select[name^="bad_"]', 'bad'],
+          ['select[name^="today_"]', 'today']
+        ];
+        mappings.forEach(([selector, key]) => {
+          const sel = tr.querySelector(selector);
+          if (sel){
+            sel.value = rowData[key] || '';
+          }
+        });
+      });
+      isRestoring = false;
+      autosave();
+      syncDeleteButtonSizes();
+      return true;
     }
 
     document.getElementById('rows').addEventListener('input', autosave);
@@ -342,25 +459,8 @@
     });
 
     document.getElementById('add-row').addEventListener('click', function(){
-      rowCount++;
-      const tbody = document.getElementById('rows');
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${areaSelectHtml(rowCount)}</td>
-        <td>${painSelectHtml(`good_${rowCount}`)}</td>
-        <td>${painSelectHtml(`normal_${rowCount}`)}</td>
-        <td>${painSelectHtml(`bad_${rowCount}`)}</td>
-        <td>${painSelectHtml(`today_${rowCount}`)}</td>
-        <td class="actions">
-          <button type="button" class="delete-row" aria-label="Delete row">
-            <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
-              <path d="M9 3a1 1 0 0 0-.894.553L7.382 5H5a1 1 0 1 0 0 2h14a1 1 0 1 0 0-2h-2.382l-.724-1.447A1 1 0 0 0 14.999 3H9Zm-3 6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9H6Zm4 2a1 1 0 0 1 2 0v8a1 1 0 1 1-2 0v-8Zm4-1a1 1 0 0 1 1 1v8a1 1 0 1 1-2 0v-8a1 1 0 0 1 1-1Z"/>
-            </svg>
-          </button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-      syncDeleteButtonSizes();
+      appendRow();
+      autosave();
     });
 
     // Delegate delete row action
@@ -422,6 +522,9 @@
 
     window.addEventListener('load', syncDeleteButtonSizes);
     window.addEventListener('resize', syncDeleteButtonSizes);
+    if (!restoreFromStorage()){
+      autosave();
+    }
   </script>
 </body>
 </html>

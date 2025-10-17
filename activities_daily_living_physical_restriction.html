@@ -160,6 +160,200 @@ const categories = [
   }
 ];
 
+const storageKey = 'adlPhysicalRestriction';
+let isRestoring = false;
+
+function rowTemplate(catIndex, rowNumber){
+  const tasks = categories[catIndex]?.tasks || [];
+  return `
+        <tr>
+          <td class="task-cell">
+            <select name="task_${catIndex}_${rowNumber}" class="task-select">
+              <option value="" disabled selected>-- Select --</option>
+              ${tasks.map(t => `<option value="${t}">${t}</option>`).join('')}
+            </select>
+            <input type="text" placeholder="Please enter task" class="other-task" disabled>
+          </td>
+          <td><input type="text" name="before_${catIndex}_${rowNumber}"></td>
+          <td><input type="text" name="current_${catIndex}_${rowNumber}"></td>
+          <td class="actions">
+            <button type="button" class="delete-row" aria-label="Delete row">
+              <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+                <path d="M9 3a1 1 0 0 0-.894.553L7.382 5H5a1 1 0 1 0 0 2h14a1 1 0 1 0 0-2h-2.382l-.724-1.447A1 1 0 0 0 14.999 3H9Zm-3 6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9H6Zm4 2a1 1 0 0 1 2 0v8a1 1 0 1 1-2 0v-8Zm4-1a1 1 0 0 1 1 1v8a1 1 0 1 1-2 0v-8a1 1 0 0 1 1-1Z"/>
+              </svg>
+            </button>
+          </td>
+        </tr>
+  `;
+}
+
+function appendTaskRow(catIndex){
+  const index = Number(catIndex);
+  const tbody = document.querySelector(`#table_${index} tbody`);
+  if (!tbody) return null;
+  const rowNumber = tbody.rows.length + 1;
+  tbody.insertAdjacentHTML('beforeend', rowTemplate(index, rowNumber));
+  return tbody.lastElementChild;
+}
+
+function resetTaskRow(tr){
+  if (!tr) return;
+  tr.classList.remove('disabled-row');
+  const select = tr.querySelector('.task-select');
+  if (select){
+    select.value = '';
+    select.classList.remove('other-hidden');
+  }
+  const other = tr.querySelector('.other-task');
+  if (other){
+    other.value = '';
+    other.disabled = true;
+    other.classList.remove('is-active');
+  }
+  const beforeInput = tr.querySelector('td:nth-child(2) input');
+  if (beforeInput){
+    beforeInput.value = '';
+    beforeInput.disabled = false;
+  }
+  const currentInput = tr.querySelector('td:nth-child(3) input');
+  if (currentInput){
+    currentInput.value = '';
+    currentInput.disabled = false;
+  }
+}
+
+function getCatIndexFromName(name){
+  const match = name ? name.match(/^task_(\d+)_/) : null;
+  return match ? Number(match[1]) : null;
+}
+
+function updateTaskOptions(catIndex){
+  if (catIndex === null || catIndex === undefined) return;
+  const index = Number(catIndex);
+  if (Number.isNaN(index)) return;
+  const tbody = document.querySelector(`#table_${index} tbody`);
+  if (!tbody) return;
+  const selects = Array.from(tbody.querySelectorAll('.task-select'));
+  const used = new Set();
+  selects.forEach(sel => {
+    const val = sel.value;
+    if (val && val !== 'Other'){
+      used.add(val);
+    }
+  });
+  selects.forEach(sel => {
+    const currentVal = sel.value;
+    const placeholderSelected = currentVal ? '' : ' selected';
+    const options = [`<option value="" disabled${placeholderSelected}>-- Select --</option>`];
+    categories[index].tasks.forEach(task => {
+      if (task === 'Other' || task === currentVal || !used.has(task)){
+        const selected = currentVal === task ? ' selected' : '';
+        options.push(`<option value="${task}"${selected}>${task}</option>`);
+      }
+    });
+    sel.innerHTML = options.join('');
+    if (currentVal === 'Other'){
+      sel.classList.add('other-hidden');
+    } else {
+      sel.classList.remove('other-hidden');
+    }
+  });
+}
+
+function saveState(){
+  if (isRestoring) return;
+  try{
+    const payload = categories.map((_, idx) => {
+      const tbody = document.querySelector(`#table_${idx} tbody`);
+      if (!tbody) return [];
+      return Array.from(tbody.querySelectorAll('tr')).map(tr => ({
+        task: tr.querySelector('.task-select')?.value || '',
+        other: tr.querySelector('.other-task')?.value || '',
+        before: tr.querySelector('td:nth-child(2) input')?.value || '',
+        current: tr.querySelector('td:nth-child(3) input')?.value || ''
+      }));
+    });
+    localStorage.setItem(storageKey, JSON.stringify(payload));
+  } catch(err){
+    // Ignore storage failures (private mode, quota exceeded, etc.)
+  }
+}
+
+function restoreState(){
+  let stored;
+  try{
+    stored = localStorage.getItem(storageKey);
+    if (!stored) return false;
+  } catch(err){
+    return false;
+  }
+  let data;
+  try{
+    data = JSON.parse(stored);
+  } catch(err){
+    return false;
+  }
+  if (!Array.isArray(data)) return false;
+
+  isRestoring = true;
+  categories.forEach((_, catIndex) => {
+    const rowsData = Array.isArray(data[catIndex]) ? data[catIndex] : [];
+    const tbody = document.querySelector(`#table_${catIndex} tbody`);
+    if (!tbody) return;
+    const targetLength = Math.max(1, rowsData.length);
+    while (tbody.rows.length < targetLength){
+      appendTaskRow(catIndex);
+    }
+    while (tbody.rows.length > targetLength && tbody.rows.length > 1){
+      tbody.removeChild(tbody.lastElementChild);
+    }
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    if (!rowsData.length){
+      rows.forEach(resetTaskRow);
+      updateTaskOptions(catIndex);
+      return;
+    }
+    rows.forEach((tr, idx) => {
+      const rowData = rowsData[idx];
+      if (!rowData){
+        resetTaskRow(tr);
+        return;
+      }
+      const select = tr.querySelector('.task-select');
+      if (select){
+        select.value = rowData.task || '';
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      const other = tr.querySelector('.other-task');
+      if (other){
+        other.value = rowData.other || '';
+        if (select && select.value === 'Other'){
+          other.disabled = false;
+          other.classList.add('is-active');
+          select.classList.add('other-hidden');
+        }
+      }
+      const lower = (select?.value || '').toLowerCase();
+      const disablePair = lower.includes('no difficulties') || lower.includes('no restriction');
+      const beforeInput = tr.querySelector('td:nth-child(2) input');
+      if (beforeInput){
+        beforeInput.value = rowData.before || (disablePair ? '-' : '');
+        beforeInput.disabled = disablePair;
+      }
+      const currentInput = tr.querySelector('td:nth-child(3) input');
+      if (currentInput){
+        currentInput.value = rowData.current || (disablePair ? '-' : '');
+        currentInput.disabled = disablePair;
+      }
+      tr.classList.toggle('disabled-row', disablePair);
+    });
+    updateTaskOptions(catIndex);
+  });
+  isRestoring = false;
+  saveState();
+  return true;
+}
+
 const container = document.getElementById('tables-container');
 
 categories.forEach((cat,catIndex)=>{
@@ -176,32 +370,15 @@ categories.forEach((cat,catIndex)=>{
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td class="task-cell">
-            <select name="task_${catIndex}_1" class="task-select">
-              <option value="" disabled selected>-- Select --</option>
-              ${cat.tasks.map(t=>`<option value="${t}">${t}</option>`).join('')}
-            </select>
-            <input type="text" placeholder="Please enter task" class="other-task" disabled>
-          </td>
-          <td><input type="text" name="before_${catIndex}_1"></td>
-          <td><input type="text" name="current_${catIndex}_1"></td>
-          <td class="actions">
-            <button type="button" class="delete-row" aria-label="Delete row">
-              <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
-                <path d="M9 3a1 1 0 0 0-.894.553L7.382 5H5a1 1 0 1 0 0 2h14a1 1 0 1 0 0-2h-2.382l-.724-1.447A1 1 0 0 0 14.999 3H9Zm-3 6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9H6Zm4 2a1 1 0 0 1 2 0v8a1 1 0 1 1-2 0v-8Zm4-1a1 1 0 0 1 1 1v8a1 1 0 1 1-2 0v-8a1 1 0 0 1 1-1Z"/>
-              </svg>
-            </button>
-          </td>
-        </tr>
+        ${rowTemplate(catIndex, 1)}
       </tbody>
     </table>
     <button type="button" class="add-row" data-cat="${catIndex}">+ Add New Task</button>
   `;
   container.appendChild(div);
+  updateTaskOptions(catIndex);
 });
 
-// Show text field if "Other" selected
 document.addEventListener('change', function(e){
   if(e.target.classList.contains('task-select')){
     const tr = e.target.closest('tr');
@@ -225,89 +402,72 @@ document.addEventListener('change', function(e){
       }
     }
 
-    // Disable/enable Before & Currently inputs if "No difficulties..." or "No restrictions" is selected
     const lower = value.toLowerCase();
     const disablePair = lower.includes('no difficulties') || lower.includes('no restriction');
     if(disablePair){
-      beforeInput.value = '-';
-      currentInput.value = '-';
-      beforeInput.disabled = true;
-      currentInput.disabled = true;
+      if (beforeInput){
+        beforeInput.value = '-';
+        beforeInput.disabled = true;
+      }
+      if (currentInput){
+        currentInput.value = '-';
+        currentInput.disabled = true;
+      }
       tr.classList.add('disabled-row');
       e.target.classList.remove('other-hidden');
     } else {
-      beforeInput.disabled = false;
-      currentInput.disabled = false;
+      if (beforeInput){
+        beforeInput.disabled = false;
+      }
+      if (currentInput){
+        currentInput.disabled = false;
+      }
       tr.classList.remove('disabled-row');
+    }
+    const catIndex = getCatIndexFromName(e.target.name);
+    if (!isRestoring){
+      updateTaskOptions(catIndex);
+      saveState();
     }
   }
 });
 
-// Add new row button
 document.addEventListener('click', function(e){
   if(e.target.classList.contains('add-row')){
-    const catIndex = e.target.dataset.cat;
-    const catTasks = categories[catIndex].tasks;
-    const tbody = document.querySelector(`#table_${catIndex} tbody`);
-    const rowCount = tbody.rows.length + 1;
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td class="task-cell">
-        <select name="task_${catIndex}_${rowCount}" class="task-select">
-          <option value="" disabled selected>-- Select --</option>
-          ${catTasks.map(t=>`<option value="${t}">${t}</option>`).join('')}
-        </select>
-        <input type="text" placeholder="Please enter task" class="other-task" disabled>
-      </td>
-      <td><input type="text" name="before_${catIndex}_${rowCount}"></td>
-      <td><input type="text" name="current_${catIndex}_${rowCount}"></td>
-      <td class="actions">
-        <button type="button" class="delete-row" aria-label="Delete row">
-          <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
-            <path d="M9 3a1 1 0 0 0-.894.553L7.382 5H5a1 1 0 1 0 0 2h14a1 1 0 1 0 0-2h-2.382l-.724-1.447A1 1 0 0 0 14.999 3H9Zm-3 6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9H6Zm4 2a1 1 0 0 1 2 0v8a1 1 0 1 1-2 0v-8Zm4-1a1 1 0 0 1 1 1v8a1 1 0 1 1-2 0v-8a1 1 0 0 1 1-1Z"/>
-          </svg>
-        </button>
-      </td>
-    `;
-    tbody.appendChild(tr);
+    const catIndex = Number(e.target.dataset.cat);
+    appendTaskRow(catIndex);
+    updateTaskOptions(catIndex);
+    if (!isRestoring) saveState();
   }
 });
 
-// Delete row button
 document.addEventListener('click', function(e){
   const btn = e.target.closest('.delete-row');
   if(!btn) return;
   const tr = btn.closest('tr');
   if(!tr) return;
+  const select = tr.querySelector('.task-select');
+  const catIndex = select ? getCatIndexFromName(select.name) : null;
   const tbody = tr.parentElement;
   const rows = tbody.querySelectorAll('tr');
   if(rows.length > 1){
     tr.remove();
-    return;
+  } else {
+    resetTaskRow(tr);
   }
-  const select = tr.querySelector('.task-select');
-  const other = tr.querySelector('.other-task');
-  const beforeInput = tr.querySelector('td:nth-child(2) input');
-  const currentInput = tr.querySelector('td:nth-child(3) input');
-  tr.classList.remove('disabled-row');
-  if (select){
-    select.value = '';
-    select.classList.remove('other-hidden');
-  }
-  if (other){
-    other.value = '';
-    other.disabled = true;
-    other.classList.remove('is-active');
-  }
-  if (beforeInput){
-    beforeInput.value = '';
-    beforeInput.disabled = false;
-  }
-  if (currentInput){
-    currentInput.value = '';
-    currentInput.disabled = false;
+  updateTaskOptions(catIndex);
+  if (!isRestoring) saveState();
+});
+
+document.addEventListener('input', function(e){
+  if (e.target.matches('input')){
+    if (!isRestoring) saveState();
   }
 });
+
+if (!restoreState()){
+  saveState();
+}
 </script>
 </body>
 </html>

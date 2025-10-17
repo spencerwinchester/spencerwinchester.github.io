@@ -283,6 +283,150 @@
 </div>
 
 <script>
+const storageKey = 'medicationFull';
+let isRestoring = false;
+
+function valueOf(row, selector){
+  const el = row.querySelector(selector);
+  return el ? el.value : '';
+}
+
+function saveState(){
+  if (isRestoring) return;
+  try{
+    const rows = Array.from(document.querySelectorAll('#medTable tbody tr')).map(row => {
+      const dosageSelect = row.querySelector('.dosage');
+      const dosageInput = row.querySelector('.dosage-text');
+      const usingText = dosageInput && !dosageInput.disabled && dosageInput.name === 'dosage[]';
+      return {
+        medication: valueOf(row, '.medication'),
+        medicationOther: valueOf(row, '.medication-other'),
+        timeAfter: valueOf(row, '.time-after'),
+        dosage: usingText ? '' : (dosageSelect ? dosageSelect.value : ''),
+        dosageText: usingText ? (dosageInput ? dosageInput.value : '') : '',
+        frequency: valueOf(row, 'select[name="frequency[]"]'),
+        frequencyOther: valueOf(row, '.frequency-other'),
+        duration: valueOf(row, '.duration'),
+        durationOther: valueOf(row, '.duration-other'),
+        reason: valueOf(row, '.reason'),
+        reasonOther: valueOf(row, '.reason-other'),
+        effectiveness: valueOf(row, '.effectiveness')
+      };
+    });
+    localStorage.setItem(storageKey, JSON.stringify({ rows }));
+  } catch(err){
+    // Ignore storage failures (quota blocks, private mode, etc.)
+  }
+}
+
+function restoreState(){
+  let stored;
+  try{
+    stored = localStorage.getItem(storageKey);
+    if (!stored) return false;
+  } catch(err){
+    return false;
+  }
+  let data;
+  try{
+    data = JSON.parse(stored);
+  } catch(err){
+    return false;
+  }
+  if (!data || !Array.isArray(data.rows)) return false;
+  const tableBody = document.querySelector('#medTable tbody');
+  if (!tableBody) return false;
+
+  isRestoring = true;
+  const targetLength = Math.max(1, data.rows.length);
+  while (tableBody.rows.length < targetLength){
+    addRow();
+  }
+  while (tableBody.rows.length > targetLength && tableBody.rows.length > 1){
+    tableBody.removeChild(tableBody.lastElementChild);
+  }
+  const rows = Array.from(tableBody.querySelectorAll('tr'));
+  data.rows.forEach((rowData, idx) => {
+    const row = rows[idx];
+    if (!row) return;
+    const medSelect = row.querySelector('.medication');
+    if (medSelect){
+      medSelect.value = rowData.medication || '';
+      medSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    const medOther = row.querySelector('.medication-other');
+    if (medOther){
+      medOther.value = rowData.medicationOther || '';
+      if (medSelect && medSelect.value === 'Other'){
+        medOther.disabled = false;
+        medOther.classList.add('is-active');
+        medSelect.classList.add('other-hidden');
+      }
+    }
+    const timeAfter = row.querySelector('.time-after');
+    if (timeAfter){
+      timeAfter.value = rowData.timeAfter || '';
+    }
+    const dosageSelect = row.querySelector('.dosage');
+    const dosageInput = row.querySelector('.dosage-text');
+    if (dosageInput && !dosageInput.disabled && dosageInput.name === 'dosage[]'){
+      dosageInput.value = rowData.dosageText || rowData.dosage || '';
+    } else if (dosageSelect){
+      dosageSelect.value = rowData.dosage || '';
+    }
+    const freqSelect = row.querySelector('select[name="frequency[]"]');
+    if (freqSelect){
+      freqSelect.value = rowData.frequency || '';
+      freqSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    const freqOther = row.querySelector('.frequency-other');
+    if (freqOther){
+      freqOther.value = rowData.frequencyOther || '';
+      if (freqSelect && freqSelect.value === 'Other'){
+        freqOther.disabled = false;
+        freqOther.classList.add('is-active');
+        freqSelect.classList.add('other-hidden');
+      }
+    }
+    const durationSelect = row.querySelector('.duration');
+    if (durationSelect){
+      durationSelect.value = rowData.duration || '';
+      durationSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    const durationOther = row.querySelector('.duration-other');
+    if (durationOther){
+      durationOther.value = rowData.durationOther || '';
+      if (durationSelect && durationSelect.value === 'Other'){
+        durationOther.disabled = false;
+        durationOther.classList.add('is-active');
+        durationSelect.classList.add('other-hidden');
+      }
+    }
+    const reasonSelect = row.querySelector('.reason');
+    if (reasonSelect){
+      reasonSelect.value = rowData.reason || '';
+      reasonSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    const reasonOther = row.querySelector('.reason-other');
+    if (reasonOther){
+      reasonOther.value = rowData.reasonOther || '';
+      if (reasonSelect && reasonSelect.value === 'Other'){
+        reasonOther.disabled = false;
+        reasonOther.classList.add('is-active');
+        reasonSelect.classList.add('other-hidden');
+      }
+    }
+    const effectivenessSelect = row.querySelector('.effectiveness');
+    if (effectivenessSelect){
+      effectivenessSelect.value = rowData.effectiveness || '';
+    }
+  });
+  isRestoring = false;
+  saveState();
+  syncDeleteButtonSizes();
+  return true;
+}
+
 // Medication → Dosage map
 const dosageMap = {
   "Paracetamol (Panadol, Tylenol, Acetaminophen)": [
@@ -666,6 +810,8 @@ bindDosageGuard(firstRow);
 
   tableBody.appendChild(newRow);
   syncDeleteButtonSizes();
+  if (!isRestoring) saveState();
+  return newRow;
   }
 
   // Delete a row; if it's the only row, just clear it
@@ -677,6 +823,7 @@ bindDosageGuard(firstRow);
     if (rows.length > 1) {
       row.remove();
       syncDeleteButtonSizes();
+      if (!isRestoring) saveState();
       return;
     }
     // If only one row remains, reset/clear it
@@ -719,10 +866,23 @@ bindDosageGuard(firstRow);
     // Hide any inline tooltips
     row.querySelectorAll('.inline-tooltip').forEach(t => { t.style.display = 'none'; });
     syncDeleteButtonSizes();
+    if (!isRestoring) saveState();
   }
 
-window.addEventListener('load', syncDeleteButtonSizes);
-window.addEventListener('resize', syncDeleteButtonSizes);
+  window.addEventListener('load', syncDeleteButtonSizes);
+  window.addEventListener('resize', syncDeleteButtonSizes);
+  const medForm = document.getElementById('medForm');
+  if (medForm){
+    medForm.addEventListener('change', (e) => {
+      if (e.target.matches('select')) saveState();
+    });
+    medForm.addEventListener('input', (e) => {
+      if (e.target.matches('input, textarea')) saveState();
+    });
+  }
+  if (!restoreState()){
+    saveState();
+  }
 </script>
 
 </body>
